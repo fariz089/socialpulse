@@ -1,0 +1,2076 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SocialPulse Pro v12 — Brand Monitoring Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<style>
+:root{
+--bg:#06060a;--bg-sidebar:#0a0a11;--bg-card:#0d0d15;--bg-elevated:#13131d;--bg-hover:#191926;
+--border:rgba(255,255,255,0.06);--border-active:rgba(99,102,241,0.5);
+--text:#eeeef5;--text-2:#9298a8;--text-3:#5c6178;
+--accent:#6366f1;--accent-2:#818cf8;--accent-dim:rgba(99,102,241,0.1);
+--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--pink:#ec4899;
+--tiktok:#00f2ea;--twitter:#1da1f2;--instagram:#e1306c;--facebook:#1877f2;--youtube:#ff0000;--news:#f97316;
+--r:12px;--r-sm:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg-elevated);border-radius:2px;}
+
+/* SIDEBAR */
+.sidebar{width:260px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100;transition:transform 0.3s;}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border);}
+.sidebar-logo{display:flex;align-items:center;gap:10px;}
+.sidebar-logo .icon{width:36px;height:36px;background:linear-gradient(135deg,var(--pink),var(--accent));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.sidebar-logo h1{font-size:14px;font-weight:800;letter-spacing:-0.3px;}
+.sidebar-logo span{font-size:9px;color:var(--text-3);display:block;}
+
+.sidebar-section{padding:12px;flex:1;overflow-y:auto;}
+.sidebar-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin:12px 0 6px 8px;font-weight:700;}
+
+.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--text-2);transition:all 0.15s;margin-bottom:2px;border:1px solid transparent;}
+.sidebar-item:hover{background:var(--bg-hover);color:var(--text);}
+.sidebar-item.active{background:var(--accent-dim);color:var(--accent-2);border-color:var(--border-active);}
+.sidebar-item i{width:16px;text-align:center;font-size:12px;}
+.sidebar-item .badge-sm{margin-left:auto;background:var(--bg-elevated);padding:1px 6px;border-radius:10px;font-size:9px;color:var(--text-3);font-weight:600;}
+
+.project-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.project-item{position:relative;}
+.project-item .project-count{margin-left:auto;font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;}
+
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg-card);position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-left h2{font-size:15px;font-weight:700;}
+.topbar-left .project-keywords{display:flex;gap:4px;flex-wrap:wrap;}
+.topbar-left .kw-tag{padding:2px 8px;background:var(--accent-dim);border:1px solid var(--border-active);border-radius:14px;font-size:10px;color:var(--accent-2);font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+
+/* DATE RANGE BAR */
+.date-bar{display:flex;align-items:center;gap:6px;padding:10px 20px;background:var(--bg-card);border-bottom:1px solid var(--border);}
+.date-preset{padding:6px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--text-2);font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap;}
+.date-preset:hover{border-color:var(--accent);color:var(--text);}
+.date-preset.active{background:var(--accent);border-color:var(--accent);color:white;}
+.date-custom{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.date-custom input[type="date"]{padding:5px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:11px;font-family:inherit;}
+.date-custom input[type="date"]:focus{outline:none;border-color:var(--accent);}
+
+/* CONTENT */
+.content{flex:1;padding:16px 20px;overflow-y:auto;}
+
+/* BUTTONS */
+.btn{padding:8px 14px;border-radius:var(--r-sm);border:none;cursor:pointer;font-weight:600;font-size:11px;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s;white-space:nowrap;}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-primary{background:var(--accent);color:white;}
+.btn-gradient{background:linear-gradient(135deg,var(--pink),var(--accent));color:white;}
+.btn-success{background:var(--green);color:white;}
+.btn-danger{background:var(--red);color:white;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-ghost{background:transparent;color:var(--text-2);padding:6px 8px;}
+.btn-ghost:hover{color:var(--text);background:var(--bg-elevated);}
+.btn-lg{padding:12px 20px;font-size:13px;border-radius:10px;}
+.btn-sm{padding:5px 9px;font-size:10px;}
+.btn-icon{padding:8px;aspect-ratio:1;justify-content:center;}
+
+/* CARDS */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.card-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:1200px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.s-total::after{background:var(--accent);}
+.stat-card.s-reach::after{background:var(--tiktok);}
+.stat-card.s-engagement::after{background:var(--pink);}
+.stat-card.s-shares::after{background:var(--yellow);}
+.stat-card.s-positive::after{background:var(--green);}
+.stat-card.s-negative::after{background:var(--red);}
+.stat-label{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-value{font-size:22px;font-weight:800;margin-top:2px;font-family:'JetBrains Mono','DM Sans',sans-serif;}
+.stat-sub{font-size:9px;color:var(--text-3);margin-top:1px;}
+
+/* GRID LAYOUTS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:12px;}
+@media(max-width:1100px){.grid-2,.grid-2-1,.grid-1-2{grid-template-columns:1fr;}}
+.chart-box{height:240px;position:relative;}
+
+/* TABS */
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:24px;max-width:540px;width:90%;max-height:85vh;overflow-y:auto;}
+.modal h3{font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:10px;color:var(--text-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;transition:border-color 0.15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);}
+.form-group input::placeholder{color:var(--text-3);}
+.form-group .hint{font-size:9px;color:var(--text-3);margin-top:3px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+/* PLATFORM TOGGLES */
+.plat-toggles{display:flex;gap:5px;flex-wrap:wrap;}
+.plat-toggle{display:flex;align-items:center;gap:6px;padding:7px 11px;background:var(--bg-elevated);border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;font-size:11px;transition:all 0.15s;user-select:none;}
+.plat-toggle:hover{border-color:var(--accent);}
+.plat-toggle.active{background:var(--accent-dim);border-color:var(--accent);}
+.plat-toggle input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;}
+.plat-toggle i{font-size:13px;}
+
+/* FEED */
+.feed{max-height:500px;overflow-y:auto;}
+.feed-item{padding:12px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.feed-item:hover{background:var(--bg-elevated);}
+.feed-header{display:flex;justify-content:space-between;margin-bottom:6px;}
+.feed-author{display:flex;align-items:center;gap:8px;}
+.author-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;overflow:hidden;}
+.author-avatar img{width:100%;height:100%;object-fit:cover;}
+.author-name{font-weight:600;font-size:11px;}
+.author-handle{font-size:9px;color:var(--text-3);}
+.feed-meta{display:flex;align-items:center;gap:4px;}
+.feed-platform{font-size:12px;}
+.feed-sent{padding:2px 6px;border-radius:4px;font-size:8px;font-weight:700;text-transform:uppercase;}
+.feed-sent.positive{background:rgba(16,185,129,0.15);color:var(--green);}
+.feed-sent.negative{background:rgba(239,68,68,0.15);color:var(--red);}
+.feed-sent.neutral{background:rgba(245,158,11,0.15);color:var(--yellow);}
+.feed-body{font-size:11px;color:var(--text-2);line-height:1.6;margin-bottom:6px;}
+.feed-body .kw-hl{background:rgba(99,102,241,0.25);color:var(--accent-2);padding:1px 3px;border-radius:3px;}
+.feed-footer{display:flex;justify-content:space-between;align-items:center;}
+.feed-stats{display:flex;gap:10px;}
+.feed-stat{font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:3px;}
+.feed-stat.hl{color:var(--tiktok);font-weight:600;}
+
+/* PLATFORM ITEMS */
+.plat-list{display:grid;gap:5px;}
+.plat-item{display:flex;align-items:center;gap:9px;padding:9px;background:var(--bg-elevated);border-radius:var(--r-sm);}
+.plat-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;}
+.plat-icon.tiktok{background:linear-gradient(135deg,var(--tiktok),#ff0050);}
+.plat-icon.twitter{background:var(--twitter);}
+.plat-icon.instagram{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);}
+.plat-icon.facebook{background:var(--facebook);}
+.plat-icon.youtube{background:var(--youtube);}
+.plat-icon.news{background:var(--news);}
+.plat-info{flex:1;}
+.plat-name{font-size:10px;font-weight:600;}
+.plat-bar{height:3px;background:var(--bg);border-radius:2px;margin-top:3px;}
+.plat-fill{height:100%;border-radius:2px;transition:width 0.5s;}
+.plat-count{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+
+/* SENTIMENT */
+.sent-wrap{display:flex;align-items:center;gap:16px;}
+.sent-chart{position:relative;width:120px;height:120px;flex-shrink:0;}
+.sent-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.sent-score{font-size:24px;font-weight:800;}
+.sent-lbl{font-size:8px;color:var(--text-3);}
+.sent-legend{flex:1;}
+.leg-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
+.leg-item:last-child{border-bottom:none;}
+.leg-left{display:flex;align-items:center;gap:6px;}
+.leg-dot{width:8px;height:8px;border-radius:3px;}
+.leg-name{font-size:10px;}
+.leg-val{font-size:11px;font-weight:600;}
+.leg-pct{font-size:9px;color:var(--text-3);margin-left:2px;}
+
+/* CREATORS */
+.creator-list{max-height:260px;overflow-y:auto;}
+.creator-item{display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg-elevated);border-radius:7px;margin-bottom:4px;}
+.creator-rank{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;background:var(--accent);}
+.creator-rank.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);}
+.creator-rank.silver{background:linear-gradient(135deg,#9ca3af,#6b7280);}
+.creator-rank.bronze{background:linear-gradient(135deg,#d97706,#b45309);}
+.creator-info{flex:1;}
+.creator-name{font-size:10px;font-weight:600;}
+.creator-stats{font-size:9px;color:var(--text-3);}
+
+/* COMPARISON */
+.compare-grid{display:grid;gap:12px;}
+.compare-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:relative;}
+.compare-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.compare-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.compare-dot{width:10px;height:10px;border-radius:50%;}
+.compare-name{font-size:13px;font-weight:700;}
+.compare-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.compare-metric{text-align:center;padding:8px;background:var(--bg-elevated);border-radius:var(--r-sm);}
+.compare-metric .cm-val{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.compare-metric .cm-lbl{font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;}
+
+/* WORD CLOUD */
+.word-cloud{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
+.word-item{padding:4px 9px;border-radius:12px;font-weight:600;transition:transform 0.15s;cursor:default;}
+.word-item:hover{transform:scale(1.1);}
+
+/* TREEMAP */
+.treemap{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;}
+.treemap-item{padding:10px;border-radius:6px;font-size:10px;font-weight:600;text-align:center;min-height:50px;display:flex;align-items:center;justify-content:center;}
+.treemap-item.large{grid-column:span 2;grid-row:span 2;font-size:13px;}
+.treemap-item.medium{grid-column:span 2;}
+
+/* TIMELINE */
+.timeline{max-height:360px;overflow-y:auto;}
+.tl-day{margin-bottom:12px;}
+.tl-date{font-size:10px;font-weight:700;padding:5px 9px;background:var(--accent);border-radius:5px;display:inline-block;margin-bottom:5px;}
+.tl-items{padding-left:12px;border-left:2px solid var(--border);}
+.tl-item{padding:6px 9px;background:var(--bg-elevated);border-radius:6px;margin-bottom:4px;font-size:10px;}
+.tl-item .src{color:var(--accent-2);font-weight:600;}
+.tl-item .time{color:var(--text-3);float:right;}
+
+/* SNA */
+.sna-box{height:350px;background:var(--bg-elevated);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;position:relative;}
+.sna-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;}
+.sna-stat{background:var(--bg-elevated);padding:9px;border-radius:7px;}
+.sna-stat-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;}
+.sna-stat-list{margin-top:5px;}
+.sna-stat-row{font-size:9px;padding:2px 0;display:flex;justify-content:space-between;}
+.sna-stat-row span:last-child{font-weight:600;color:var(--accent-2);}
+
+/* TOAST */
+.toast-c{position:fixed;top:12px;right:12px;z-index:9999;}
+.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:slideIn 0.3s;margin-bottom:5px;max-width:280px;}
+@keyframes slideIn{from{opacity:0;transform:translateX(80px);}}
+.toast-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.toast.success .toast-icon{background:rgba(16,185,129,0.15);color:var(--green);}
+.toast.error .toast-icon{background:rgba(239,68,68,0.15);color:var(--red);}
+.toast.info .toast-icon{background:rgba(99,102,241,0.15);color:var(--accent);}
+.toast-body{flex:1;}
+.toast-title{font-size:11px;font-weight:600;}
+.toast-msg{font-size:9px;color:var(--text-3);}
+
+/* EMPTY */
+.empty{text-align:center;padding:30px;color:var(--text-3);}
+.empty i{font-size:30px;margin-bottom:8px;display:block;}
+.empty p{font-size:11px;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-260px);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+
+/* MEDIA */
+.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:800px){.media-grid{grid-template-columns:1fr;}}
+.media-chart{height:180px;}
+.media-list{max-height:180px;overflow-y:auto;}
+.media-item{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;background:var(--bg-elevated);border-radius:5px;margin-bottom:4px;font-size:9px;cursor:pointer;transition:all 0.15s;}
+.media-item:hover{background:var(--bg-hover);transform:translateX(3px);}
+.plat-item{cursor:pointer;transition:all 0.15s;}.plat-item:hover{background:var(--bg-hover);transform:translateX(3px);}
+.creator-item{cursor:pointer;transition:all 0.15s;}.creator-item:hover{background:var(--bg-hover);transform:translateX(3px);}
+.word-item{cursor:pointer;}.treemap-item{cursor:pointer;transition:transform 0.15s;}.treemap-item:hover{transform:scale(1.03);}
+.sna-box{height:400px;background:var(--bg-elevated);border-radius:var(--r-sm);position:relative;overflow:hidden;}
+.sna-stat-list{max-height:180px;overflow-y:auto;}
+.sna-stat-row{font-size:10px;padding:5px 6px;display:flex;justify-content:space-between;cursor:pointer;border-radius:4px;transition:all 0.15s;}
+.sna-stat-row:hover{background:var(--bg-hover);transform:translateX(3px);}
+.sna-stat-row span:last-child{font-weight:600;color:var(--accent-2);}
+.loc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
+.loc-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.loc-card:hover{border-color:var(--accent);transform:translateY(-2px);background:var(--bg-hover);}
+.loc-city{font-size:12px;font-weight:700;margin-bottom:2px;}
+.loc-count{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent-2);}
+.loc-sub{font-size:9px;color:var(--text-3);}
+.drilldown-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:250;display:none;justify-content:flex-end;}
+.drilldown-overlay.active{display:flex;}
+.drilldown-panel{width:480px;max-width:90vw;background:var(--bg-card);border-left:1px solid var(--border);height:100vh;overflow-y:auto;padding:20px;animation:slideInR 0.3s;}
+@keyframes slideInR{from{transform:translateX(100%);}to{transform:translateX(0);}}
+.drilldown-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.drilldown-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.drilldown-count{font-size:10px;color:var(--accent-2);padding:2px 8px;background:var(--accent-dim);border-radius:10px;}
+.ai-section{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.ai-section h4{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ai-content{font-size:12px;color:var(--text-2);line-height:1.8;white-space:pre-wrap;}
+.ai-loading{text-align:center;padding:20px;color:var(--text-3);}
+.ai-loading i{font-size:24px;margin-bottom:8px;display:block;animation:spin 1s linear infinite;}
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.swot-card{padding:12px;border-radius:var(--r-sm);font-size:11px;line-height:1.7;}
+.swot-card h5{font-size:11px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+.swot-s{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);}
+.swot-w{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);}
+.swot-o{background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);}
+.swot-t{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);}
+.engage-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.engage-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center;}
+.engage-card .ec-val{font-size:20px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.engage-card .ec-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;}
+.engage-card .ec-sub{font-size:9px;color:var(--text-3);}
+</style>
+</head>
+<body>
+<div class="toast-c" id="toasts"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="icon"><i class="fas fa-bolt"></i></div>
+      <div><h1>SocialPulse<sup style="font-size:8px;color:var(--pink)">v12</sup></h1><span>Brand Monitoring Platform</span></div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Menu</div>
+    <div class="sidebar-item active" onclick="navTo('dashboard')" data-nav="dashboard"><i class="fas fa-chart-line"></i> Dashboard</div>
+    <div class="sidebar-item" onclick="navTo('mentions')" data-nav="mentions"><i class="fas fa-comments"></i> Mentions</div>
+    <div class="sidebar-item" onclick="navTo('analysis')" data-nav="analysis"><i class="fas fa-brain"></i> Analysis</div>
+    <div class="sidebar-item" onclick="navTo('sna')" data-nav="sna"><i class="fas fa-project-diagram"></i> SNA</div>
+    <div class="sidebar-item" onclick="navTo('locations')" data-nav="locations"><i class="fas fa-map-marker-alt"></i> Locations</div>
+    <div class="sidebar-item" onclick="navTo('timeline')" data-nav="timeline"><i class="fas fa-stream"></i> Timeline</div>
+    <div class="sidebar-item" onclick="navTo('influencers')" data-nav="influencers"><i class="fas fa-crown"></i> Influencers</div>
+    <div class="sidebar-item" onclick="navTo('media')" data-nav="media"><i class="fas fa-newspaper"></i> Media Share</div>
+    <div class="sidebar-item" onclick="navTo('aianalysis')" data-nav="aianalysis"><i class="fas fa-robot"></i> AI Analysis</div>
+    <div class="sidebar-item" onclick="navTo('comparison')" data-nav="comparison"><i class="fas fa-exchange-alt"></i> Comparison</div>
+
+    <div class="sidebar-label">Projects</div>
+    <div id="sidebar-projects"><div class="sidebar-item" style="color:var(--text-3);font-size:11px;"><i class="fas fa-plus"></i> Create first project</div></div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-item" onclick="openModal('modal-settings')"><i class="fas fa-cog"></i> Settings</div>
+    <div class="sidebar-item" onclick="openModal('modal-new-project')"><i class="fas fa-plus-circle" style="color:var(--green)"></i> New Project</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;" id="btn-menu"><i class="fas fa-bars"></i></button>
+      <h2 id="topbar-title">Dashboard</h2>
+      <div class="project-keywords" id="topbar-keywords"></div>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:10px;color:var(--text-3);" id="topbar-date"></span>
+      <span style="font-size:9px;color:var(--text-3);padding:4px 8px;background:var(--bg-elevated);border-radius:12px;display:none;" id="last-scrape-badge" title="Last scrape date"><i class="fas fa-clock"></i> <span id="last-scrape-text">-</span></span>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+      <button class="btn btn-gradient btn-sm" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+      <button class="btn btn-success btn-sm" id="btn-scrape" onclick="openScrapeModal()"><i class="fas fa-sync-alt"></i> Update Data</button>
+    </div>
+  </div>
+
+  <!-- DATE BAR (Brand24 style) -->
+  <div class="date-bar" id="date-bar">
+    <div class="date-preset active" data-days="1" onclick="setDatePreset(1)">1D</div>
+    <div class="date-preset" data-days="3" onclick="setDatePreset(3)">3D</div>
+    <div class="date-preset" data-days="7" onclick="setDatePreset(7)">7D</div>
+    <div class="date-preset" data-days="14" onclick="setDatePreset(14)">14D</div>
+    <div class="date-preset" data-days="30" onclick="setDatePreset(30)">1M</div>
+    <div class="date-preset" data-days="90" onclick="setDatePreset(90)">3M</div>
+    <div class="date-preset" data-days="180" onclick="setDatePreset(180)">6M</div>
+    <div class="date-preset" data-days="365" onclick="setDatePreset(365)">1Y</div>
+    <div class="date-preset" data-days="730" onclick="setDatePreset(730)">2Y</div>
+    <div class="date-preset" data-days="1095" onclick="setDatePreset(1095)">3Y</div>
+    <div class="date-preset" data-days="1825" onclick="setDatePreset(1825)">5Y</div>
+    <div class="date-custom">
+      <input type="date" id="df" onchange="applyCustomDate()"/>
+      <span style="color:var(--text-3);font-size:10px;">→</span>
+      <input type="date" id="dt" onchange="applyCustomDate()"/>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="card" id="progress-panel" style="display:none;margin:12px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:12px;font-weight:600;"><i class="fas fa-sync fa-spin"></i> Fetching Data...</span>
+      <span style="font-size:11px;" id="progress-pct">0%</span>
+    </div>
+    <div style="height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:10px;">
+      <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:3px;transition:width 0.3s;width:0%;" id="progress-bar"></div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;" id="progress-steps"></div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content" id="content-area">
+    <!-- Filled dynamically -->
+    <div class="empty" id="no-project-msg">
+      <i class="fas fa-folder-plus"></i>
+      <p style="font-size:14px;font-weight:600;margin-bottom:6px;">Buat Project Pertamamu</p>
+      <p>Seperti Brand24 — satu project bisa punya beberapa keyword.<br>Contoh: Project "Juragan 99" → keywords: juragan99, juragan_99, juragan 99</p>
+      <button class="btn btn-gradient btn-lg" style="margin-top:16px;" onclick="openModal('modal-new-project')"><i class="fas fa-plus"></i> Buat Project Baru</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRILLDOWN PANEL -->
+<div class="drilldown-overlay" id="drilldown-overlay" onclick="if(event.target===this)closeDrilldown()">
+  <div class="drilldown-panel">
+    <div class="drilldown-header">
+      <div class="drilldown-title" id="drilldown-title"><i class="fas fa-list"></i> Posts</div>
+      <button class="btn btn-ghost" onclick="closeDrilldown()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="drilldown-content"></div>
+  </div>
+</div>
+
+<!-- MODAL: New Project -->
+<div class="modal-overlay" id="modal-new-project">
+  <div class="modal">
+    <h3><i class="fas fa-folder-plus" style="color:var(--green)"></i> Create New Project</h3>
+    <div class="form-group">
+      <label>Project Name</label>
+      <input type="text" id="np-name" placeholder="e.g., Juragan 99"/>
+      <div class="hint">Nama untuk identifikasi project</div>
+    </div>
+    <div class="form-group">
+      <label>Keywords (pisahkan dengan koma)</label>
+      <input type="text" id="np-keywords" placeholder="e.g., juragan99, juragan_99, juragan 99"/>
+      <div class="hint">Semua keyword akan di-monitor sebagai satu project, seperti Brand24</div>
+    </div>
+    <div class="form-group">
+      <label>Platforms</label>
+      <div class="plat-toggles" id="np-platforms">
+        <label class="plat-toggle active"><input type="checkbox" value="tiktok" checked/><i class="fab fa-tiktok" style="color:var(--tiktok)"></i> TikTok</label>
+        <label class="plat-toggle active"><input type="checkbox" value="twitter" checked/><i class="fab fa-twitter" style="color:var(--twitter)"></i> Twitter</label>
+        <label class="plat-toggle active"><input type="checkbox" value="instagram" checked/><i class="fab fa-instagram" style="color:var(--instagram)"></i> Instagram</label>
+        <label class="plat-toggle"><input type="checkbox" value="facebook"/><i class="fab fa-facebook" style="color:var(--facebook)"></i> Facebook</label>
+        <label class="plat-toggle"><input type="checkbox" value="youtube"/><i class="fab fa-youtube" style="color:var(--youtube)"></i> YouTube</label>
+        <label class="plat-toggle active"><input type="checkbox" value="news" checked/><i class="fas fa-newspaper" style="color:var(--news)"></i> News</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Color</label><input type="color" id="np-color" value="#6366f1" style="height:38px;padding:2px;"/></div>
+      <div class="form-group"><label>Language</label><select id="np-lang"><option value="id">Indonesian</option><option value="en">English</option><option value="">All</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-new-project')">Batal</button>
+      <button class="btn btn-success" onclick="createProject()"><i class="fas fa-check"></i> Buat Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Settings -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <h3><i class="fas fa-cog" style="color:var(--accent)"></i> Settings</h3>
+    <div class="form-group">
+      <label>Apify API Token</label>
+      <div style="display:flex;gap:6px;"><input type="password" id="s-token" placeholder="apify_api_xxxxxxxx"/><button class="btn btn-primary btn-sm" onclick="saveToken()"><i class="fas fa-save"></i></button></div>
+      <div class="hint">Token disimpan di database. Tidak hilang meski browser di-refresh!</div>
+      <div id="token-ok" style="display:none;margin-top:4px;font-size:10px;color:var(--green);"><i class="fas fa-check-circle"></i> Token tersimpan</div>
+    </div>
+    <div class="form-group">
+      <label>API Base URL</label>
+      <input type="text" id="s-api" value="/api"/>
+      <div class="hint">Default /api. Tanpa Docker: http://localhost:3001/api</div>
+    </div>
+    <div class="form-group">
+      <label>OpenRouter API Token (untuk AI Analysis)</label>
+      <div style="display:flex;gap:6px;"><input type="password" id="s-or-token" placeholder="sk-or-v1-xxxxxxxx"/><button class="btn btn-primary btn-sm" onclick="saveORToken()"><i class="fas fa-save"></i></button></div>
+      <div class="hint">Untuk generate Executive Summary, SWOT, Rekomendasi otomatis. Daftar di openrouter.ai</div>
+      <div id="or-token-ok" style="display:none;margin-top:4px;font-size:10px;color:var(--green);"><i class="fas fa-check-circle"></i> OpenRouter token tersimpan</div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-settings')">Tutup</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Scrape -->
+<div class="modal-overlay" id="modal-scrape">
+  <div class="modal" style="max-width:480px;">
+    <h3><i class="fas fa-rocket" style="color:var(--green)"></i> Scrape Data — <span id="scrape-project-name"></span></h3>
+    
+    <!-- Last Scrape Info -->
+    <div id="scrape-status-box" style="background:var(--bg-elevated);border-radius:var(--r-sm);padding:12px;margin-bottom:12px;display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <i class="fas fa-history" style="color:var(--accent)"></i>
+        <span style="font-size:11px;font-weight:600;">Status Terakhir</span>
+      </div>
+      <div id="scrape-last-info" style="font-size:10px;color:var(--text-2);"></div>
+    </div>
+    
+    <!-- Scrape Mode Selection -->
+    <div class="form-group">
+      <label>Mode Scraping</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label class="plat-toggle active" style="flex:1;min-width:140px;"><input type="radio" name="scrape-mode" value="incremental" checked onchange="updateScrapeMode()"/> <i class="fas fa-sync" style="color:var(--green)"></i> Update (Incremental)</label>
+        <label class="plat-toggle" style="flex:1;min-width:140px;"><input type="radio" name="scrape-mode" value="custom" onchange="updateScrapeMode()"/> <i class="fas fa-calendar" style="color:var(--accent)"></i> Custom Range</label>
+      </div>
+      <div class="hint" id="mode-hint">Scrape data baru sejak terakhir kali update. Hemat token!</div>
+    </div>
+    
+    <!-- Custom Date Range (hidden by default) -->
+    <div class="form-group" id="custom-date-group" style="display:none;">
+      <label>Date Range</label>
+      <div class="form-row">
+        <input type="date" id="sc-from"/>
+        <input type="date" id="sc-to"/>
+      </div>
+    </div>
+    
+    <!-- Scrape Settings -->
+    <div class="form-group">
+      <label>Max Results per Keyword per Platform per Day</label>
+      <select id="sc-max">
+        <option value="10">10 (hemat)</option>
+        <option value="20">20 (standar)</option>
+        <option value="30" selected>30 (lengkap)</option>
+        <option value="50">50 (sangat lengkap)</option>
+        <option value="100">100 (maksimal)</option>
+      </select>
+      <div class="hint">Incremental mode akan chunk per hari untuk hasil lebih akurat!</div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-scrape')">Batal</button>
+      <button class="btn btn-success btn-lg" id="btn-start-scrape" onclick="startScraping()"><i class="fas fa-rocket"></i> Mulai Scrape</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Compare -->
+<div class="modal-overlay" id="modal-compare">
+  <div class="modal">
+    <h3><i class="fas fa-exchange-alt" style="color:var(--accent)"></i> Compare Projects</h3>
+    <div class="form-group">
+      <label>Pilih 2+ Project untuk dibandingkan</label>
+      <div id="compare-project-list"></div>
+    </div>
+    <div class="form-group">
+      <label>Period</label>
+      <div class="form-row">
+        <input type="date" id="cmp-from"/>
+        <input type="date" id="cmp-to"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-compare')">Batal</button>
+      <button class="btn btn-primary" onclick="runComparison()"><i class="fas fa-chart-bar"></i> Compare</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const API = '/api';
+let currentProject = null;
+let currentView = 'dashboard';
+let projects = [];
+let posts = [];
+let charts = {};
+let dateFrom = '', dateTo = '';
+let lastStats = null;
+
+// ===== CONSTANTS =====
+const CITIES=["Jakarta","Surabaya","Bandung","Medan","Semarang","Makassar","Palembang","Tangerang","Depok","Bekasi","Malang","Yogyakarta","Jogja","Denpasar","Bali","Surakarta","Solo","Balikpapan","Banjarmasin","Pontianak","Manado","Padang","Pekanbaru","Batam","Bogor","Cirebon","Tasikmalaya","Garut","Sukabumi","Karawang","Purwokerto","Tegal","Pekalongan","Magelang","Kediri","Jember","Blitar","Probolinggo","Pasuruan","Mojokerto","Madiun","Ngawi","Tuban","Lamongan","Gresik","Sidoarjo","Bangkalan","Pamekasan","Sumenep","Lumajang","Banyuwangi","Situbondo","Bondowoso","Tulungagung","Trenggalek","Pacitan","Ponorogo","Magetan","Nganjuk","Lombok","Mataram","Kupang","Ambon","Jayapura","Sorong","Ternate","Gorontalo","Palu","Kendari","Samarinda","Tarakan","Bontang","Palangkaraya","Jambi","Bengkulu","Lampung","Bandar Lampung","Aceh","Banda Aceh","Pati"];
+const POS_W=["bagus","keren","mantap","mantep","suka","love","amazing","great","good","awesome","best","recommended","rekomen","worth","wajib","top","jos","gokil","nyaman","mewah","enak","puas","senang","happy","excellent","perfect","thanks","terima kasih","terbaik","favorit","super","sukses","kece","premium"];
+const NEG_W=["jelek","buruk","kecewa","disappointed","bad","worst","terrible","awful","poor","hate","benci","marah","angry","gagal","fail","scam","penipuan","bohong","bodong","lambat","lelet","rusak","error","komplain","telat","delay","kotor","negatif"];
+const P_CFG={tiktok:{icon:'fab fa-tiktok',color:'#00f2ea',grad:'linear-gradient(135deg,#00f2ea,#ff0050)'},twitter:{icon:'fab fa-twitter',color:'#1da1f2',grad:'#1da1f2'},instagram:{icon:'fab fa-instagram',color:'#e1306c',grad:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)'},facebook:{icon:'fab fa-facebook',color:'#1877f2',grad:'#1877f2'},youtube:{icon:'fab fa-youtube',color:'#ff0000',grad:'#ff0000'},news:{icon:'fas fa-newspaper',color:'#f97316',grad:'#f97316'}};
+
+// ===== HELPERS =====
+const fmt=n=>{if(n==null||isNaN(n))return'0';n=Number(n);if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toString();};
+function toast(t,title,msg){const c=document.getElementById('toasts');const e=document.createElement('div');e.className=`toast ${t}`;e.innerHTML=`<div class="toast-icon"><i class="fas fa-${t==='success'?'check':t==='error'?'times':'info'}"></i></div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg||''}</div></div>`;c.appendChild(e);setTimeout(()=>e.remove(),4000);}
+function sentiment(text){if(!text)return'neutral';const l=text.toLowerCase();const p=POS_W.filter(w=>l.includes(w)).length;const n=NEG_W.filter(w=>l.includes(w)).length;return p>n?'positive':n>p?'negative':'neutral';}
+function findCities(text){if(!text)return[];const l=text.toLowerCase();return[...new Set(CITIES.filter(c=>l.includes(c.toLowerCase())))];}
+function findTags(text){if(!text)return[];return[...(text.match(/#[\w\d_]+/gi)||[]),...(text.match(/@[\w\d_.]+/gi)||[])];}
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');});});
+document.querySelectorAll('.plat-toggle').forEach(t=>{const cb=t.querySelector('input');t.addEventListener('click',e=>{if(e.target.tagName==='INPUT')return;cb.checked=!cb.checked;t.classList.toggle('active',cb.checked);});cb.addEventListener('change',()=>t.classList.toggle('active',cb.checked));});
+
+// ===== DATE PRESETS =====
+function setDatePreset(days){
+  document.querySelectorAll('.date-preset').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.date-preset[data-days="${days}"]`)?.classList.add('active');
+  const to=new Date();const from=new Date();from.setDate(from.getDate()-days);
+  dateFrom=from.toISOString().split('T')[0];dateTo=to.toISOString().split('T')[0];
+  document.getElementById('df').value=dateFrom;document.getElementById('dt').value=dateTo;
+  if(currentProject)loadProjectData();
+}
+function applyCustomDate(){
+  document.querySelectorAll('.date-preset').forEach(p=>p.classList.remove('active'));
+  dateFrom=document.getElementById('df').value;dateTo=document.getElementById('dt').value;
+  if(currentProject)loadProjectData();
+}
+
+// ===== NAV =====
+function navTo(view){
+  currentView=view;
+  document.querySelectorAll('.sidebar-item[data-nav]').forEach(i=>i.classList.remove('active'));
+  document.querySelector(`.sidebar-item[data-nav="${view}"]`)?.classList.add('active');
+  document.getElementById('topbar-title').textContent={dashboard:'Dashboard',mentions:'Mentions',analysis:'Analysis',sna:'SNA',locations:'Locations',timeline:'Timeline',influencers:'Influencers',media:'Media Share',aianalysis:'AI Analysis',comparison:'Comparison'}[view]||'Dashboard';
+  if(currentProject&&lastStats)renderView(lastStats);
+  else if(currentProject)loadProjectData();
+  else if(view==='comparison')showComparisonView();
+}
+
+// ===== DRILLDOWN =====
+function openDrilldown(title,icon,filterFn){
+  const filtered=posts.filter(filterFn);
+  document.getElementById('drilldown-title').innerHTML=`<i class="fas fa-${icon}"></i> ${title} <span class="drilldown-count">${filtered.length} posts</span>`;
+  const kws=Array.isArray(currentProject?.keywords)?currentProject.keywords:[currentProject?.keywords||''];
+  document.getElementById('drilldown-content').innerHTML=filtered.length?filtered.slice(0,50).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return `<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:${c.grad}"><img src="${p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36`}" onerror="this.style.display='none'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''}</div></div></div><div class="feed-meta"><span style="color:${c.color}"><i class="${c.icon}"></i></span> <span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${(p.content||'').substring(0,200)}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><p>No posts found</p></div>';
+  document.getElementById('drilldown-overlay').classList.add('active');
+}
+function closeDrilldown(){document.getElementById('drilldown-overlay').classList.remove('active');}
+
+// ===== OPENROUTER AI =====
+async function saveORToken(){const v=document.getElementById('s-or-token').value.trim();if(!v){toast('error','Error','Masukkan OpenRouter token');return;}try{await fetch(`${API}/settings/openrouter_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:v})});document.getElementById('or-token-ok').style.display='block';toast('success','Saved!','OpenRouter token tersimpan');}catch(e){localStorage.setItem('or_token',v);toast('info','Saved locally','');}}
+async function getORToken(){const t=document.getElementById('s-or-token').value.trim();if(t)return t;try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){document.getElementById('s-or-token').value=d.value;return d.value;}}catch{}return localStorage.getItem('or_token')||'';}
+async function loadORToken(){try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){document.getElementById('s-or-token').value=d.value;document.getElementById('or-token-ok').style.display='block';}}catch{}}
+
+async function callOpenRouter(systemPrompt, userPrompt){
+  const token=await getORToken();
+  if(!token){toast('error','Token Required','Set OpenRouter token di Settings');openModal('modal-settings');return null;}
+  const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({model:'google/gemini-2.0-flash-001',messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],temperature:0.7,max_tokens:4000})
+  });
+  if(!r.ok){const err=await r.text();throw new Error('OpenRouter error: '+err);}
+  const d=await r.json();
+  return d.choices?.[0]?.message?.content||'No response';
+}
+
+async function runAIAnalysis(){
+  if(posts.length<5){toast('error','Data Kurang','Minimal 5 posts untuk AI analysis');return;}
+  const btn=document.getElementById('btn-ai');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+  document.getElementById('ai-placeholder').innerHTML='<div class="ai-loading"><i class="fas fa-robot"></i><p>AI sedang menganalisis data...</p><p style="font-size:9px;color:var(--text-3);">Biasanya 15-30 detik</p></div>';
+
+  // Build data summary for AI
+  const stats={total:posts.length,views:0,likes:0,shares:0,comments:0,positive:0,negative:0,neutral:0};
+  const platforms={};const hashtags={};const cities={};const authors={};
+  posts.forEach(p=>{
+    stats.views+=p.views||0;stats.likes+=p.likes||0;stats.shares+=p.shares||0;stats.comments+=p.comments||0;
+    stats[p.sentiment||'neutral']++;
+    platforms[p.platform]=(platforms[p.platform]||0)+1;
+    const pC=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);
+    pC.forEach(c=>cities[c]=(cities[c]||0)+1);
+    (p.content||'').match(/#[\w\d_]+/gi)?.forEach(t=>hashtags[t.toLowerCase()]=(hashtags[t.toLowerCase()]||0)+1);
+    if(!authors[p.author])authors[p.author]={posts:0,views:0,platform:p.platform};
+    authors[p.author].posts++;authors[p.author].views+=(p.views||0);
+  });
+  const topHashtags=Object.entries(hashtags).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const topAuthors=Object.entries(authors).sort((a,b)=>b[1].views-a[1].views).slice(0,10);
+  const topCities=Object.entries(cities).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topPlatforms=Object.entries(platforms).sort((a,b)=>b[1]-a[1]);
+  const topContent=posts.sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,5).map(p=>({author:p.author,platform:p.platform,content:(p.content||'').substring(0,100),views:p.views,likes:p.likes,sentiment:p.sentiment}));
+
+  const dataSummary=`Keyword: ${currentProject?.name||'Unknown'}
+Periode: ${dateFrom} sampai ${dateTo}
+Total Mentions: ${stats.total}
+Total Views/Reach: ${stats.views}
+Total Likes: ${stats.likes} | Shares: ${stats.shares} | Comments: ${stats.comments}
+Sentimen: Positif ${stats.positive} (${Math.round(stats.positive/stats.total*100)}%), Netral ${stats.neutral} (${Math.round(stats.neutral/stats.total*100)}%), Negatif ${stats.negative} (${Math.round(stats.negative/stats.total*100)}%)
+Platform: ${topPlatforms.map(([p,c])=>p+' '+c+' ('+Math.round(c/stats.total*100)+'%)').join(', ')}
+Top Hashtags: ${topHashtags.map(([h,c])=>h+' ('+c+')').join(', ')}
+Top Influencers: ${topAuthors.map(([n,d])=>n+' ('+d.views+' views, '+d.posts+' posts, '+d.platform+')').join(', ')}
+Top Cities: ${topCities.map(([c,n])=>c+' ('+n+')').join(', ')}
+Top Content: ${topContent.map(p=>p.author+' ['+p.platform+'] '+p.content+' ('+p.views+' views)').join(' | ')}`;
+
+  const systemPrompt=`Kamu adalah analis media sosial profesional. Berikan analisis dalam Bahasa Indonesia yang mendalam dan actionable. Format output sebagai JSON dengan struktur:
+{"executive_summary":"string (3-5 paragraf analisis mendalam)","swot":{"strengths":["item1","item2","item3"],"weaknesses":["item1","item2","item3"],"opportunities":["item1","item2","item3"],"threats":["item1","item2","item3"]},"recommendations":["Reko 1 dengan penjelasan","Reko 2","Reko 3","Reko 4","Reko 5","Reko 6"],"hashtag_clusters":[{"name":"Cluster Name","hashtags":["#tag1","#tag2"],"description":"Penjelasan cluster"}]}
+Jangan tambahkan markdown backticks atau apapun di luar JSON.`;
+
+  try{
+    const response=await callOpenRouter(systemPrompt,'Analisis data social media monitoring berikut:\n\n'+dataSummary);
+    if(!response){btn.disabled=false;btn.innerHTML='<i class="fas fa-magic"></i> Generate Analysis';return;}
+
+    let parsed;
+    try{
+      const cleaned=response.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+      parsed=JSON.parse(cleaned);
+    }catch(e){
+      // Try to extract JSON from response
+      const jsonMatch=response.match(/\{[\s\S]*\}/);
+      if(jsonMatch)parsed=JSON.parse(jsonMatch[0]);
+      else throw new Error('Could not parse AI response');
+    }
+
+    // Render Executive Summary
+    if(parsed.executive_summary){
+      document.getElementById('ai-executive').style.display='block';
+      document.getElementById('ai-executive-text').textContent=parsed.executive_summary;
+    }
+    // Render SWOT
+    if(parsed.swot){
+      document.getElementById('ai-swot').style.display='block';
+      const sw=parsed.swot;
+      document.getElementById('ai-swot-grid').innerHTML=`
+        <div class="swot-card swot-s"><h5><i class="fas fa-plus-circle" style="color:var(--green)"></i> Strengths</h5>${(sw.strengths||[]).map(s=>'• '+s).join('<br>')}</div>
+        <div class="swot-card swot-w"><h5><i class="fas fa-minus-circle" style="color:var(--red)"></i> Weaknesses</h5>${(sw.weaknesses||[]).map(s=>'• '+s).join('<br>')}</div>
+        <div class="swot-card swot-o"><h5><i class="fas fa-arrow-circle-up" style="color:var(--accent)"></i> Opportunities</h5>${(sw.opportunities||[]).map(s=>'• '+s).join('<br>')}</div>
+        <div class="swot-card swot-t"><h5><i class="fas fa-exclamation-triangle" style="color:var(--yellow)"></i> Threats</h5>${(sw.threats||[]).map(s=>'• '+s).join('<br>')}</div>`;
+    }
+    // Render Recommendations
+    if(parsed.recommendations){
+      document.getElementById('ai-reco').style.display='block';
+      document.getElementById('ai-reco-text').innerHTML=parsed.recommendations.map((r,i)=>`<div style="margin-bottom:8px;padding:8px;background:var(--bg-card);border-radius:6px;border-left:3px solid var(--accent);"><strong>${i+1}.</strong> ${r}</div>`).join('');
+    }
+    // Render Hashtag Clusters
+    if(parsed.hashtag_clusters){
+      document.getElementById('ai-hashtag-cluster').style.display='block';
+      document.getElementById('ai-hashtag-text').innerHTML=parsed.hashtag_clusters.map(c=>`<div style="margin-bottom:8px;padding:8px;background:var(--bg-card);border-radius:6px;"><strong style="color:var(--accent)">${c.name}</strong><br><span style="color:var(--green)">${(c.hashtags||[]).join(', ')}</span><br><span style="font-size:10px;color:var(--text-3)">${c.description||''}</span></div>`).join('');
+    }
+    document.getElementById('ai-placeholder').style.display='none';
+    toast('success','AI Analysis Done!','Scroll down untuk melihat hasil');
+  }catch(e){
+    console.error('AI Analysis error:',e);
+    document.getElementById('ai-placeholder').innerHTML=`<div style="color:var(--red);padding:20px;"><i class="fas fa-exclamation-circle"></i> Error: ${e.message}<br><br><button class="btn btn-outline btn-sm" onclick="runAIAnalysis()">Coba Lagi</button></div>`;
+    toast('error','AI Error',e.message.substring(0,60));
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-magic"></i> Generate Analysis';
+}
+
+// ===== TOKEN =====
+async function loadToken(){
+  try{const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();if(d.value){document.getElementById('s-token').value=d.value;document.getElementById('token-ok').style.display='block';return d.value;}}catch(e){}
+  const l=localStorage.getItem('apify_token');if(l){document.getElementById('s-token').value=l;return l;}return null;
+}
+async function saveToken(){
+  const t=document.getElementById('s-token').value.trim();if(!t){toast('error','Error','Token kosong');return;}
+  try{await fetch(`${API}/settings/apify_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:t})});document.getElementById('token-ok').style.display='block';toast('success','Saved!','Token disimpan di database');}
+  catch(e){localStorage.setItem('apify_token',t);toast('info','Saved locally','Backend unavailable');}
+}
+async function getToken(){const t=document.getElementById('s-token').value.trim();if(t)return t;try{const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();if(d.value)return d.value;}catch(e){}return localStorage.getItem('apify_token')||'';}
+
+// ===== PROJECTS =====
+async function loadProjects(){
+  try{const r=await fetch(`${API}/projects`);projects=await r.json();}catch(e){projects=[];}
+  renderSidebar();
+  if(projects.length>0&&!currentProject)selectProject(projects[0]);
+  else if(projects.length===0)document.getElementById('no-project-msg').style.display='block';
+}
+
+function renderSidebar(){
+  const el=document.getElementById('sidebar-projects');
+  if(projects.length===0){el.innerHTML='<div class="sidebar-item" onclick="openModal(\'modal-new-project\')" style="color:var(--text-3);font-size:11px;"><i class="fas fa-plus"></i> Create first project</div>';return;}
+  el.innerHTML=projects.map(p=>`
+    <div class="sidebar-item project-item ${currentProject?.id===p.id?'active':''}" onclick="selectProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+      <div class="project-dot" style="background:${p.color}"></div>
+      <span style="flex:1;font-size:11px;">${p.name}</span>
+      <span class="project-count">${fmt(p.total_mentions||0)}</span>
+    </div>`).join('');
+}
+
+async function createProject(){
+  const name=document.getElementById('np-name').value.trim();
+  const kw=document.getElementById('np-keywords').value.trim();
+  if(!name||!kw){toast('error','Error','Isi nama dan keywords');return;}
+  const platforms=[...document.querySelectorAll('#np-platforms input:checked')].map(i=>i.value);
+  const color=document.getElementById('np-color').value;
+  const lang=document.getElementById('np-lang').value;
+  try{
+    const r=await fetch(`${API}/projects`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,keywords:kw,platforms,color,language:lang})});
+    const p=await r.json();
+    toast('success','Project Created!',`"${name}" dengan ${kw.split(',').length} keywords`);
+    closeModal('modal-new-project');
+    await loadProjects();
+    selectProject(projects.find(pr=>pr.id===p.id)||projects[0]);
+  }catch(e){toast('error','Error',e.message);}
+}
+
+function selectProject(p){
+  if(!p) return;
+  if(typeof p==='string') {
+    try { p=JSON.parse(p); } catch(e) { console.error('Invalid project JSON:', e); return; }
+  }
+  if(!p || !p.id || !p.name) { console.error('Invalid project object:', p); return; }
+  currentProject=p;
+  const noMsg = document.getElementById('no-project-msg');
+  if(noMsg) noMsg.style.display='none';
+  document.getElementById('topbar-title').textContent=p.name;
+  const kws=Array.isArray(p.keywords)?p.keywords:(p.keywords?[p.keywords]:[]);
+  document.getElementById('topbar-keywords').innerHTML=kws.map(k=>`<span class="kw-tag">${k}</span>`).join('');
+  renderSidebar();
+  loadProjectData();
+}
+
+// ===== LOAD PROJECT DATA =====
+async function loadProjectData(){
+  if(!currentProject || !currentProject.id) return;
+  const params=new URLSearchParams({date_from:dateFrom,date_to:dateTo});
+  try{
+    const[statsRes,postsRes]=await Promise.all([
+      fetch(`${API}/stats/${currentProject.id}?${params}`),
+      fetch(`${API}/posts?project_id=${currentProject.id}&date_from=${dateFrom}&date_to=${dateTo}&limit=200&sort=views`)
+    ]);
+    const stats=await statsRes.json();
+    const postsData=await postsRes.json();
+    posts=postsData.posts.map(p=>({...p,timestamp:p.post_date?new Date(p.post_date):new Date(p.created_at)}));
+    lastStats=stats;
+    renderView(stats);
+  }catch(e){
+    console.error('loadProjectData error:', e);
+    posts=[];
+    renderView({totals:{total:0,total_views:0,total_likes:0,total_shares:0,positive:0,negative:0,neutral:0},byPlatform:[],byDate:[],sentimentByDate:[],topAuthors:[],hourly:[],topHashtags:{},sources:[]});
+  }
+}
+
+function renderView(stats){
+  const area=document.getElementById('content-area');
+  const noMsg = document.getElementById('no-project-msg');
+  if(noMsg) noMsg.style.display='none';
+  
+  if(currentView==='comparison'){showComparisonView();return;}
+
+  // Safely get totals with defaults
+  const totals = stats?.totals || {};
+  const total = totals.total || 0;
+  const safeTotal = total || 1; // Avoid division by zero
+  const posP=Math.round(((totals.positive||0)/safeTotal)*100);
+  const negP=Math.round(((totals.negative||0)/safeTotal)*100);
+  const neuP=Math.round(((totals.neutral||0)/safeTotal)*100);
+  const score=Math.round((((totals.positive||0)-(totals.negative||0))/safeTotal)*100);
+
+  // Build stats bar
+  let html=`<div class="stats-row">
+    <div class="stat-card s-total"><div class="stat-label">Total Mentions</div><div class="stat-value">${fmt(totals.total)}</div><div class="stat-sub">across all platforms</div></div>
+    <div class="stat-card s-reach"><div class="stat-label">Total Reach</div><div class="stat-value">${fmt(totals.total_views)}</div><div class="stat-sub">impressions</div></div>
+    <div class="stat-card s-engagement"><div class="stat-label">Engagement</div><div class="stat-value">${fmt(totals.total_likes)}</div><div class="stat-sub">likes + reactions</div></div>
+    <div class="stat-card s-shares"><div class="stat-label">Shares</div><div class="stat-value">${fmt(totals.total_shares)}</div><div class="stat-sub">viral reach</div></div>
+    <div class="stat-card s-positive"><div class="stat-label">Positive</div><div class="stat-value" style="color:var(--green)">${fmt(totals.positive)}</div><div class="stat-sub">${posP}%</div></div>
+    <div class="stat-card s-negative"><div class="stat-label">Negative</div><div class="stat-value" style="color:var(--red)">${fmt(totals.negative)}</div><div class="stat-sub">${negP}%</div></div>
+  </div>`;
+
+  if(currentView==='dashboard'){
+    // Engagement breakdown
+    const avgEng=total>0?Math.round(((totals.total_likes||0)+(totals.total_shares||0))/total):0;
+    html+=`<div class="engage-cards"><div class="engage-card"><div class="ec-val" style="color:var(--accent)">${fmt(totals.total_likes)}</div><div class="ec-lbl">Likes</div></div><div class="engage-card"><div class="ec-val" style="color:var(--green)">${fmt(totals.total_comments||0)}</div><div class="ec-lbl">Comments</div></div><div class="engage-card"><div class="ec-val" style="color:var(--pink)">${fmt(totals.total_shares)}</div><div class="ec-lbl">Shares</div></div><div class="engage-card"><div class="ec-val" style="color:var(--yellow)">${avgEng}</div><div class="ec-lbl">Avg Engagement/Post</div></div></div>`;
+    html+=`<div class="grid-2-1">
+      <div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Discussion Volume</span></div><div class="chart-box"><canvas id="c-volume"></canvas></div></div>
+      <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-fire"></i> Top Posts by Reach</span></div><div class="chart-box"><canvas id="c-top"></canvas></div></div></div>
+      <div>
+        <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-brain"></i> Sentiment</span></div>
+          <div class="sent-wrap"><div class="sent-chart"><canvas id="c-sent"></canvas><div class="sent-center"><div class="sent-score" id="s-score">${score>0?'+':''}${score}</div><div class="sent-lbl">Score</div></div></div>
+          <div class="sent-legend">
+            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--green)"></div><span class="leg-name">Positive</span></div><div><span class="leg-val">${totals.positive||0}</span><span class="leg-pct">(${posP}%)</span></div></div>
+            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--yellow)"></div><span class="leg-name">Neutral</span></div><div><span class="leg-val">${totals.neutral||0}</span><span class="leg-pct">(${neuP}%)</span></div></div>
+            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--red)"></div><span class="leg-name">Negative</span></div><div><span class="leg-val">${totals.negative||0}</span><span class="leg-pct">(${negP}%)</span></div></div>
+          </div></div></div>
+        <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-th-large"></i> Platforms</span></div><div class="plat-list" id="r-plats"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-cloud"></i> Trending</span></div><div class="word-cloud" id="r-cloud"></div></div>
+      </div></div>`;
+  } else if(currentView==='mentions'){
+    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-comments"></i> All Mentions</span><span style="font-size:10px;color:var(--accent);font-weight:700;">${posts.length}</span></div><div class="feed" id="r-feed"></div></div>`;
+  } else if(currentView==='analysis'){
+    html+=`<div class="grid-2"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-line"></i> Trend</span></div><div class="chart-box"><canvas id="c-trend"></canvas></div></div>
+    <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-clock"></i> Hourly</span></div><div class="chart-box"><canvas id="c-hourly"></canvas></div></div></div>
+    <div class="grid-2"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-area"></i> Sentiment Over Time</span></div><div class="chart-box"><canvas id="c-sent-time"></canvas></div></div>
+    <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Sentiment by Platform</span></div><div class="chart-box"><canvas id="c-sent-plat"></canvas></div></div></div>
+    <div class="grid-2"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-th"></i> Hot Issues</span></div><div class="treemap" id="r-treemap"></div></div>
+    <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-pie"></i> Media Share</span></div><div class="media-grid"><div class="media-chart"><canvas id="c-media"></canvas></div><div class="media-list" id="r-media"></div></div></div></div>`;
+  } else if(currentView==='influencers'){
+    html+=`<div class="grid-2"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-crown"></i> Top Influencers</span><span style="font-size:9px;color:var(--text-3)">Klik untuk lihat posts</span></div><div class="creator-list" id="r-creators"></div></div>
+    <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Influencer Sentiment</span></div><div class="chart-box"><canvas id="c-inf-sent"></canvas></div></div></div>`;
+  } else if(currentView==='sna'){
+    html+=`<div class="grid-2-1"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-project-diagram"></i> Social Network Analysis</span><span style="font-size:9px;color:var(--text-3)">Klik node untuk melihat posts</span></div><div class="sna-box" id="sna-graph"></div></div><div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-users"></i> Top People</span></div><div class="sna-stat-list" id="sna-people"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-hashtag"></i> Top Issues</span></div><div class="sna-stat-list" id="sna-issues"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-globe"></i> Top Sources</span></div><div class="sna-stat-list" id="sna-sources"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-map-marker-alt"></i> Top Locations</span></div><div class="sna-stat-list" id="sna-locations"></div></div></div></div>`;
+  } else if(currentView==='locations'){
+    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-map-marker-alt"></i> Mention Locations</span><span style="font-size:9px;color:var(--text-3)">Klik kota untuk melihat posts</span></div><div class="loc-grid" id="r-locations"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Location Distribution</span></div><div class="chart-box"><canvas id="c-loc"></canvas></div></div>`;
+  } else if(currentView==='timeline'){
+    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-stream"></i> Timeline & Issues</span><span style="font-size:9px;color:var(--text-3)">Klik post untuk buka link</span></div><div class="timeline" id="r-timeline"></div></div>`;
+  } else if(currentView==='media'){
+    html+=`<div class="grid-2"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-pie"></i> Source Distribution</span></div><div style="height:300px;"><canvas id="c-media-full"></canvas></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-newspaper"></i> All Sources</span><span style="font-size:9px;color:var(--text-3)">Klik untuk lihat posts</span></div><div class="media-list" id="r-media-full" style="max-height:300px;overflow-y:auto;"></div></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-rss"></i> Latest News</span></div><div class="feed" id="r-news" style="max-height:400px;"></div></div>`;
+  } else if(currentView==='aianalysis'){
+    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-robot"></i> AI-Powered Analysis</span><button class="btn btn-gradient btn-sm" onclick="runAIAnalysis()" id="btn-ai"><i class="fas fa-magic"></i> Generate Analysis</button></div>
+    <div id="ai-result">
+      <div class="ai-section" id="ai-executive" style="display:none;"><h4><i class="fas fa-file-alt" style="color:var(--accent)"></i> Executive Summary</h4><div class="ai-content" id="ai-executive-text"></div></div>
+      <div class="ai-section" id="ai-swot" style="display:none;"><h4><i class="fas fa-th-large" style="color:var(--pink)"></i> SWOT Analysis</h4><div class="swot-grid" id="ai-swot-grid"></div></div>
+      <div class="ai-section" id="ai-reco" style="display:none;"><h4><i class="fas fa-lightbulb" style="color:var(--yellow)"></i> Rekomendasi Strategis</h4><div class="ai-content" id="ai-reco-text"></div></div>
+      <div class="ai-section" id="ai-hashtag-cluster" style="display:none;"><h4><i class="fas fa-tags" style="color:var(--green)"></i> Hashtag Cluster Analysis</h4><div class="ai-content" id="ai-hashtag-text"></div></div>
+      <div id="ai-placeholder" style="text-align:center;padding:40px;color:var(--text-3);"><i class="fas fa-robot" style="font-size:40px;display:block;margin-bottom:12px;opacity:0.3;"></i><p style="font-size:13px;margin-bottom:6px;">Klik "Generate Analysis" untuk mendapatkan insight AI</p><p style="font-size:10px;">Membutuhkan OpenRouter API token (set di Settings) dan minimal 10 posts data</p></div>
+    </div></div>
+    <div class="engage-cards"><div class="engage-card"><div class="ec-val" style="color:var(--accent)">${fmt(totals.total_likes)}</div><div class="ec-lbl">Total Likes</div></div><div class="engage-card"><div class="ec-val" style="color:var(--green)">${fmt(totals.total_comments||0)}</div><div class="ec-lbl">Comments</div></div><div class="engage-card"><div class="ec-val" style="color:var(--pink)">${fmt(totals.total_shares)}</div><div class="ec-lbl">Shares</div></div><div class="engage-card"><div class="ec-val" style="color:var(--yellow)">${total>0?Math.round(((totals.total_likes||0)+(totals.total_shares||0)+(totals.total_comments||0))/total):0}</div><div class="ec-lbl">Avg Engagement/Post</div></div></div>`;
+  }
+
+  area.innerHTML=html;
+  setTimeout(()=>renderCharts(stats),50);
+}
+
+function renderCharts(stats){
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});charts={};
+  const dates=[...new Set(stats.byDate.map(d=>d.date))].sort();
+
+  if(currentView==='dashboard'){
+    // Volume
+    const dateMap={};stats.byDate.forEach(d=>{if(!dateMap[d.date])dateMap[d.date]={};dateMap[d.date][d.platform]=d.count;});
+    const platNames=['tiktok','twitter','instagram','facebook','youtube','news'];
+    const colors=['rgba(0,242,234,0.7)','rgba(29,161,242,0.7)','rgba(225,48,108,0.7)','rgba(24,119,242,0.7)','rgba(255,0,0,0.7)','rgba(249,115,22,0.7)'];
+    const el1=document.getElementById('c-volume');if(el1)charts.vol=new Chart(el1,{type:'bar',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:platNames.map((p,i)=>({label:p.charAt(0).toUpperCase()+p.slice(1),data:dates.map(d=>dateMap[d]?.[p]||0),backgroundColor:colors[i],borderRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178',font:{size:9}}}}}});
+
+    // Top posts
+    const topP=[...posts].sort((a,b)=>b.views-a.views).slice(0,8);
+    const el2=document.getElementById('c-top');if(el2)charts.top=new Chart(el2,{type:'bar',data:{labels:topP.map(p=>(p.author||'').substring(0,12)),datasets:[{data:topP.map(p=>p.views),backgroundColor:'rgba(99,102,241,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178',font:{size:9},callback:v=>fmt(v)}},y:{grid:{display:false},ticks:{color:'#9298a8',font:{size:9}}}}}});
+
+    // Sentiment donut
+    const el3=document.getElementById('c-sent');if(el3)charts.sent=new Chart(el3,{type:'doughnut',data:{labels:['Positive','Neutral','Negative'],datasets:[{data:[stats.totals.positive,stats.totals.neutral,stats.totals.negative],backgroundColor:['#10b981','#f59e0b','#ef4444'],borderWidth:0,cutout:'72%'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}}}});
+
+    // Platforms
+    const maxP=Math.max(...stats.byPlatform.map(p=>p.count),1);
+    const plEl=document.getElementById('r-plats');
+    if(plEl)plEl.innerHTML=stats.byPlatform.map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return`<div class="plat-item"><div class="plat-icon ${p.platform}"><i class="${c.icon}"></i></div><div class="plat-info"><div class="plat-name">${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</div><div class="plat-bar"><div class="plat-fill" style="width:${(p.count/maxP)*100}%;background:${c.grad}"></div></div></div><div class="plat-count">${p.count}</div></div>`;}).join('')||'<div class="empty"><p>No data</p></div>';
+
+    // Word cloud
+    const ht=stats.topHashtags||{};const sorted=Object.entries(ht).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    const clEl=document.getElementById('r-cloud');
+    if(clEl){const max=sorted[0]?.[1]||1;const cls=['#6366f1','#ec4899','#10b981','#f59e0b','#00f2ea','#1da1f2'];clEl.innerHTML=sorted.map(([w,c])=>{const sz=10+(c/max)*12;const cl=cls[Math.floor(Math.random()*cls.length)];return`<span class="word-item" style="font-size:${sz}px;background:${cl}20;color:${cl}">${w}</span>`;}).join('')||'<span style="color:var(--text-3);font-size:10px;">No keywords</span>';}
+  }
+
+  if(currentView==='mentions'){
+    const feedEl=document.getElementById('r-feed');
+    if(feedEl){
+      const kws=Array.isArray(currentProject.keywords)?currentProject.keywords:[currentProject.keywords];
+      const kwPat=kws.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+      const kwRe=new RegExp(`(${kwPat})`,'gi');
+      feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Scrape Now" to start!</p></div>';
+    }
+  }
+
+  if(currentView==='analysis'){
+    // Trend
+    const el4=document.getElementById('c-trend');if(el4){const dateMap2={};stats.byDate.forEach(d=>{dateMap2[d.date]=(dateMap2[d.date]||0)+d.count;});charts.trend=new Chart(el4,{type:'line',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:[{label:'Mentions',data:dates.map(d=>dateMap2[d]||0),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+
+    // Hourly
+    const el5=document.getElementById('c-hourly');if(el5){const hMap={};stats.hourly.forEach(h=>hMap[h.hour]=h.count);charts.hourly=new Chart(el5,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>`${i}:00`),datasets:[{data:Array.from({length:24},(_,i)=>hMap[i]||0),backgroundColor:'rgba(236,72,153,0.6)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178',font:{size:8}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+
+    // Sentiment time
+    const el6=document.getElementById('c-sent-time');if(el6){const stm={};stats.sentimentByDate.forEach(d=>{if(!stm[d.date])stm[d.date]={positive:0,neutral:0,negative:0};stm[d.date][d.sentiment]=d.count;});charts.sentTime=new Chart(el6,{type:'line',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:[{label:'Positive',data:dates.map(d=>stm[d]?.positive||0),borderColor:'#10b981',tension:0.4},{label:'Neutral',data:dates.map(d=>stm[d]?.neutral||0),borderColor:'#f59e0b',tension:0.4},{label:'Negative',data:dates.map(d=>stm[d]?.negative||0),borderColor:'#ef4444',tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+
+    // Sentiment by platform
+    const el7=document.getElementById('c-sent-plat');if(el7){const spm={};posts.forEach(p=>{if(!spm[p.platform])spm[p.platform]={positive:0,neutral:0,negative:0};spm[p.platform][p.sentiment]++;});const pls=Object.keys(spm);charts.sentPlat=new Chart(el7,{type:'bar',data:{labels:pls.map(p=>p.charAt(0).toUpperCase()+p.slice(1)),datasets:[{label:'Positive',data:pls.map(p=>spm[p].positive),backgroundColor:'#10b981'},{label:'Neutral',data:pls.map(p=>spm[p].neutral),backgroundColor:'#f59e0b'},{label:'Negative',data:pls.map(p=>spm[p].negative),backgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5c6178'}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+
+    // Treemap
+    const tmEl=document.getElementById('r-treemap');if(tmEl){const ht=stats.topHashtags||{};const sorted=Object.entries(ht).sort((a,b)=>b[1]-a[1]).slice(0,12);const cls2=['#ef4444','#f97316','#f59e0b','#84cc16','#10b981','#06b6d4','#6366f1','#ec4899','#8b5cf6','#14b8a6','#0ea5e9','#eab308'];tmEl.innerHTML=sorted.map(([w,c],i)=>`<div class="treemap-item ${i===0?'large':i<3?'medium':''}" style="background:${cls2[i%cls2.length]}">${w}<br><small>${c}</small></div>`).join('')||'<p style="grid-column:span 4;text-align:center;color:var(--text-3);">No data</p>';}
+
+    // Media
+    const mlEl=document.getElementById('r-media');if(mlEl){const total=stats.sources.reduce((s,v)=>s+v.count,0)||1;mlEl.innerHTML=stats.sources.slice(0,10).map(s=>`<div class="media-item"><span style="font-weight:600;">${s.source_name.substring(0,20)}</span><span style="color:var(--accent-2);">${Math.round((s.count/total)*100)}%</span></div>`).join('')||'<p style="text-align:center;color:var(--text-3);font-size:10px;">No data</p>';}
+    const el8=document.getElementById('c-media');if(el8&&stats.sources.length>0){charts.media=new Chart(el8,{type:'doughnut',data:{labels:stats.sources.slice(0,8).map(s=>s.source_name.substring(0,12)),datasets:[{data:stats.sources.slice(0,8).map(s=>s.count),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#00f2ea','#1da1f2','#ef4444','#8b5cf6'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#9298a8',font:{size:8}}}}}});}
+  }
+
+  if(currentView==='influencers'){
+    const crEl=document.getElementById('r-creators');if(crEl){crEl.innerHTML=stats.topAuthors.map((a,i)=>{const c=P_CFG[a.platform]||P_CFG.tiktok;const sp=Math.round(((a.positive-a.negative)/(a.post_count||1))*100);const safeAuthor=a.author.replace(/'/g,"\\'");return`<div class="creator-item" onclick="openDrilldown('${safeAuthor}','user',p=>p.author==='${safeAuthor}')"><div class="creator-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(a.author)}&background=${c.color.replace('#','')}&color=fff&size=30&bold=true" style="width:30px;height:30px;border-radius:50%;"><div class="creator-info"><div class="creator-name">${a.author}</div><div class="creator-stats">${fmt(a.views)} reach • ${a.post_count} posts</div></div><span style="font-size:9px;color:${sp>=0?'var(--green)':'var(--red)'}">${sp>0?'+':''}${sp}%</span></div>`;}).join('')||'<div class="empty"><p>No data</p></div>';}
+    const el9=document.getElementById('c-inf-sent');if(el9&&stats.topAuthors.length>0){const top5=stats.topAuthors.slice(0,5);charts.infSent=new Chart(el9,{type:'bar',data:{labels:top5.map(a=>a.author.substring(0,10)),datasets:[{label:'Positive',data:top5.map(a=>a.positive),backgroundColor:'#10b981'},{label:'Negative',data:top5.map(a=>a.negative),backgroundColor:'#ef4444'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5c6178',font:{size:8}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+  }
+
+  // ===== SNA VIEW =====
+  if(currentView==='sna'){ renderSNA(stats); }
+
+  // ===== LOCATIONS VIEW =====
+  if(currentView==='locations'){
+    const cityMap={};posts.forEach(p=>{const pC=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);pC.forEach(c=>cityMap[c]=(cityMap[c]||0)+1);});
+    const sortedCities=Object.entries(cityMap).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    const locEl=document.getElementById('r-locations');
+    if(locEl)locEl.innerHTML=sortedCities.length?sortedCities.map(([city,count])=>`<div class="loc-card" onclick="openDrilldown('${city}','map-marker-alt',p=>{const c=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):[];return c.includes('${city}')||(p.content||'').toLowerCase().includes('${city.toLowerCase()}');})""><div class="loc-city">${city}</div><div class="loc-count">${count}</div><div class="loc-sub">mentions</div></div>`).join(''):'<div class="empty" style="grid-column:1/-1;"><p>Tidak ada data lokasi</p></div>';
+    const elLoc=document.getElementById('c-loc');
+    if(elLoc&&sortedCities.length>0){const top15=sortedCities.slice(0,15);charts.loc=new Chart(elLoc,{type:'bar',data:{labels:top15.map(([c])=>c),datasets:[{data:top15.map(([,v])=>v),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
+  }
+
+  // ===== TIMELINE VIEW =====
+  if(currentView==='timeline'){
+    const tlEl=document.getElementById('r-timeline');
+    if(tlEl){const dayMap={};posts.forEach(p=>{const d=p.timestamp?.toISOString?.().split('T')[0]||(p.post_date?.split('T')[0])||'Unknown';if(!dayMap[d])dayMap[d]=[];dayMap[d].push(p);});
+    const sortedDays=Object.entries(dayMap).sort((a,b)=>b[0].localeCompare(a[0]));
+    tlEl.innerHTML=sortedDays.length?sortedDays.map(([date,items])=>`<div class="tl-day"><div class="tl-date">${date}</div><div class="tl-items">${items.sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,15).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return`<div class="tl-item" ${p.url?`onclick="window.open('${p.url}','_blank')"`:''} title="${(p.content||'').substring(0,100).replace(/"/g,'&quot;')}"><span class="src" style="color:${c.color}"><i class="${c.icon}"></i> ${(p.author||'Unknown').substring(0,20)}</span><span class="time">${fmt(p.views)} views</span><div style="margin-top:3px;color:var(--text-2);font-size:9px;">${(p.content||'').substring(0,80)}${(p.content||'').length>80?'...':''}</div></div>`;}).join('')}</div></div>`).join(''):'<div class="empty"><p>No data</p></div>';}
+  }
+
+  // ===== MEDIA SHARE VIEW =====
+  if(currentView==='media'){
+    const srcMap={};posts.forEach(p=>{const s=p.source_name||p.platform;srcMap[s]=(srcMap[s]||0)+1;});
+    const sortedSrc=Object.entries(srcMap).sort((a,b)=>b[1]-a[1]);const totalSrc=sortedSrc.reduce((s,[,v])=>s+v,0)||1;
+    const mlEl=document.getElementById('r-media-full');
+    if(mlEl)mlEl.innerHTML=sortedSrc.map(([src,count])=>{const safeSrc=src.replace(/'/g,"\\'");return`<div class="media-item" onclick="openDrilldown('${safeSrc}','newspaper',p=>(p.source_name||p.platform)==='${safeSrc}')"><span style="font-weight:600;">${src}</span><span><span style="color:var(--accent-2)">${count}</span> <span style="color:var(--text-3)">(${Math.round((count/totalSrc)*100)}%)</span></span></div>`;}).join('');
+    const elMF=document.getElementById('c-media-full');
+    if(elMF&&sortedSrc.length>0){const top10=sortedSrc.slice(0,10);charts.mediaFull=new Chart(elMF,{type:'doughnut',data:{labels:top10.map(([s])=>s.substring(0,15)),datasets:[{data:top10.map(([,v])=>v),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b','#00f2ea','#1da1f2','#ef4444','#8b5cf6','#f97316','#84cc16'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#9298a8',font:{size:9}}}}}});}
+    const newsEl=document.getElementById('r-news');
+    if(newsEl){const newsPosts=posts.filter(p=>p.platform==='news').sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    newsEl.innerHTML=newsPosts.length?newsPosts.slice(0,20).map(p=>`<div class="feed-item" style="cursor:pointer" ${p.url?`onclick="window.open('${p.url}','_blank')"`:''} ><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:var(--news)"><i class="fas fa-newspaper" style="color:white;font-size:14px;"></i></div><div><div class="author-name">${p.source_name||p.author||'News'}</div><div class="author-handle">${p.timestamp?.toLocaleDateString?.('id-ID')||''}</div></div></div><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div><div class="feed-body">${(p.content||'').substring(0,200)}</div></div>`).join(''):'<div class="empty"><p>No news data</p></div>';}
+  }
+}
+
+// ===== SNA D3 FORCE GRAPH =====
+function renderSNA(stats){
+  const container=document.getElementById('sna-graph');
+  if(!container||posts.length===0){if(container)container.innerHTML='<div class="empty"><p>No data for SNA</p></div>';return;}
+  const authorMap={};const tagMap={};const cityMap={};const srcMap={};
+  posts.forEach(p=>{
+    const a=p.author||'Unknown';if(!authorMap[a])authorMap[a]={count:0,views:0,platform:p.platform};authorMap[a].count++;authorMap[a].views+=(p.views||0);
+    (findTags(p.content)||[]).forEach(t=>{const tl=t.toLowerCase();tagMap[tl]=(tagMap[tl]||0)+1;});
+    const pC=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);pC.forEach(c=>cityMap[c]=(cityMap[c]||0)+1);
+    const s=p.source_name||p.platform;srcMap[s]=(srcMap[s]||0)+1;
+  });
+  const topA=Object.entries(authorMap).sort((a,b)=>b[1].views-a[1].views).slice(0,12);
+  const topT=Object.entries(tagMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topC=Object.entries(cityMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topS=Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Populate clickable side panels
+  const mkRow=(name,count,icon,fn)=>`<div class="sna-stat-row" onclick="${fn}"><span>${name.substring(0,18)}</span><span>${count}</span></div>`;
+  const pEl=document.getElementById('sna-people');if(pEl)pEl.innerHTML=topA.map(([n,d])=>mkRow(n,d.count,'user',`openDrilldown('${n.replace(/'/g,"\\'")}','user',p=>p.author==='${n.replace(/'/g,"\\'")}')`)).join('');
+  const iEl=document.getElementById('sna-issues');if(iEl)iEl.innerHTML=topT.map(([t,c])=>mkRow(t,c,'hashtag',`openDrilldown('${t}','hashtag',p=>(p.content||'').toLowerCase().includes('${t.toLowerCase()}'))`)).join('');
+  const sEl=document.getElementById('sna-sources');if(sEl)sEl.innerHTML=topS.map(([s,c])=>mkRow(s,c,'globe',`openDrilldown('${s.replace(/'/g,"\\'")}','globe',p=>(p.source_name||p.platform)==='${s.replace(/'/g,"\\'")}')`)).join('');
+  const lEl=document.getElementById('sna-locations');if(lEl)lEl.innerHTML=topC.length?topC.map(([c,n])=>mkRow(c,n,'map-marker-alt',`openDrilldown('${c}','map-marker-alt',p=>{const ci=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):[];return ci.includes('${c}')||(p.content||'').toLowerCase().includes('${c.toLowerCase()}');})`)).join(''):'<div style="font-size:9px;color:var(--text-3);padding:4px;">No location data</div>';
+
+  // D3 Force Graph
+  const w=container.clientWidth,h=container.clientHeight;container.innerHTML='';
+  const keyword=currentProject?.name||'Keyword';
+  const nodes=[{id:keyword,type:'center',size:25,color:'#ec4899'}];const links=[];
+  topA.forEach(([n,d])=>{nodes.push({id:n,type:'person',size:7+Math.min(14,d.count*2),color:P_CFG[d.platform]?.color||'#6366f1'});links.push({source:keyword,target:n,strength:d.count});});
+  topT.slice(0,6).forEach(([t,c])=>{nodes.push({id:t,type:'issue',size:5+Math.min(10,c*2),color:'#f59e0b'});links.push({source:keyword,target:t,strength:c});});
+  topC.slice(0,5).forEach(([c,n])=>{nodes.push({id:c,type:'location',size:5+Math.min(8,n*2),color:'#10b981'});links.push({source:keyword,target:c,strength:n});});
+
+  const svg=d3.select(container).append('svg').attr('width',w).attr('height',h);
+  const sim=d3.forceSimulation(nodes).force('link',d3.forceLink(links).id(d=>d.id).distance(80).strength(0.3)).force('charge',d3.forceManyBody().strength(-180)).force('center',d3.forceCenter(w/2,h/2)).force('collision',d3.forceCollide().radius(d=>d.size+5));
+  const link=svg.append('g').selectAll('line').data(links).join('line').attr('stroke','#ec4899').attr('stroke-opacity',0.3).attr('stroke-width',d=>Math.min(3,d.strength*0.5));
+  const node=svg.append('g').selectAll('g').data(nodes).join('g').style('cursor','pointer')
+    .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+  node.append('circle').attr('r',d=>d.size).attr('fill',d=>d.color).attr('stroke','rgba(255,255,255,0.2)').attr('stroke-width',1);
+  node.append('text').text(d=>d.id.substring(0,12)).attr('text-anchor','middle').attr('dy',d=>d.size+12).attr('fill','#9298a8').attr('font-size',d=>d.type==='center'?11:9).attr('font-weight',d=>d.type==='center'?'bold':'normal');
+  node.on('click',(e,d)=>{if(d.type==='center')return;if(d.type==='person')openDrilldown(d.id,'user',p=>p.author===d.id);else if(d.type==='issue')openDrilldown(d.id,'hashtag',p=>(p.content||'').toLowerCase().includes(d.id.toLowerCase()));else if(d.type==='location')openDrilldown(d.id,'map-marker-alt',p=>{const c=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):[];return c.includes(d.id)||(p.content||'').toLowerCase().includes(d.id.toLowerCase());});});
+  sim.on('tick',()=>{link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);node.attr('transform',d=>`translate(${Math.max(d.size,Math.min(w-d.size,d.x))},${Math.max(d.size,Math.min(h-d.size,d.y))})`);});
+}
+function showComparisonView(){
+  const area=document.getElementById('content-area');
+  if(projects.length<2){area.innerHTML='<div class="empty"><i class="fas fa-exchange-alt"></i><p style="font-size:14px;font-weight:600;">Butuh minimal 2 project untuk Comparison</p><p>Buat project baru untuk membandingkan brand.</p></div>';return;}
+  area.innerHTML='<div class="empty"><i class="fas fa-exchange-alt"></i><p style="font-size:14px;font-weight:600;">Project Comparison</p><p>Bandingkan performa brand side-by-side — seperti Brand24!</p><button class="btn btn-primary btn-lg" style="margin-top:14px;" onclick="openCompareModal()"><i class="fas fa-chart-bar"></i> Start Comparison</button></div>';
+}
+
+function openCompareModal(){
+  const el=document.getElementById('compare-project-list');
+  el.innerHTML=projects.map(p=>`<label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg-elevated);border-radius:6px;margin-bottom:4px;cursor:pointer;font-size:12px;"><input type="checkbox" value="${p.id}" style="accent-color:var(--accent);"/><div class="project-dot" style="background:${p.color}"></div>${p.name} <span style="color:var(--text-3);margin-left:auto;font-size:10px;">${fmt(p.total_mentions||0)} mentions</span></label>`).join('');
+  const d=new Date();const f=new Date();f.setDate(f.getDate()-30);
+  document.getElementById('cmp-from').value=f.toISOString().split('T')[0];
+  document.getElementById('cmp-to').value=d.toISOString().split('T')[0];
+  openModal('modal-compare');
+}
+
+async function runComparison(){
+  const ids=[...document.querySelectorAll('#compare-project-list input:checked')].map(i=>parseInt(i.value));
+  if(ids.length<2){toast('error','Error','Pilih minimal 2 project');return;}
+  closeModal('modal-compare');
+  const df=document.getElementById('cmp-from').value;const dt=document.getElementById('cmp-to').value;
+  try{
+    const r=await fetch(`${API}/compare`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_ids:ids,date_from:df,date_to:dt})});
+    const data=await r.json();
+    renderComparison(data);
+  }catch(e){toast('error','Error',e.message);}
+}
+
+function renderComparison(data){
+  const area=document.getElementById('content-area');
+  let html=`<div style="margin-bottom:16px;"><h3 style="font-size:14px;margin-bottom:4px;">Project Comparison</h3><span style="font-size:10px;color:var(--text-3);">${data.period.date_from} → ${data.period.date_to}</span></div>`;
+
+  // Share of Voice bar
+  html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-pie"></i> Share of Voice</span></div><div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:10px;">`;
+  data.projects.forEach(p=>{html+=`<div style="width:${p.totals.shareOfVoice}%;background:${p.project.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;min-width:30px;">${p.totals.shareOfVoice}%</div>`;});
+  html+=`</div><div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+  data.projects.forEach(p=>{html+=`<span style="display:flex;align-items:center;gap:4px;font-size:10px;"><span style="width:8px;height:8px;border-radius:50%;background:${p.project.color}"></span>${p.project.name}</span>`;});
+  html+=`</div></div>`;
+
+  // Metrics grid
+  html+=`<div class="compare-grid" style="grid-template-columns:repeat(${data.projects.length},1fr);">`;
+  data.projects.forEach(p=>{
+    const t=p.totals;const total=t.mentions||1;
+    html+=`<div class="compare-card" style="--card-color:${p.project.color};"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:${p.project.color};border-radius:12px 12px 0 0;"></div>
+      <div class="compare-header"><div class="compare-dot" style="background:${p.project.color}"></div><div class="compare-name">${p.project.name}</div></div>
+      <div class="compare-metrics">
+        <div class="compare-metric"><div class="cm-val">${fmt(t.mentions)}</div><div class="cm-lbl">Mentions</div></div>
+        <div class="compare-metric"><div class="cm-val">${fmt(t.reach)}</div><div class="cm-lbl">Reach</div></div>
+        <div class="compare-metric"><div class="cm-val">${t.presenceScore}</div><div class="cm-lbl">Presence</div></div>
+        <div class="compare-metric"><div class="cm-val">${t.shareOfVoice}%</div><div class="cm-lbl">SoV</div></div>
+      </div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center;">
+        <div style="background:rgba(16,185,129,0.1);border-radius:4px;padding:4px;"><div style="font-size:14px;font-weight:800;color:var(--green);">${Math.round((t.positive/total)*100)}%</div><div style="font-size:8px;color:var(--text-3);">Positive</div></div>
+        <div style="background:rgba(245,158,11,0.1);border-radius:4px;padding:4px;"><div style="font-size:14px;font-weight:800;color:var(--yellow);">${Math.round((t.neutral/total)*100)}%</div><div style="font-size:8px;color:var(--text-3);">Neutral</div></div>
+        <div style="background:rgba(239,68,68,0.1);border-radius:4px;padding:4px;"><div style="font-size:14px;font-weight:800;color:var(--red);">${Math.round((t.negative/total)*100)}%</div><div style="font-size:8px;color:var(--text-3);">Negative</div></div>
+      </div></div>`;
+  });
+  html+=`</div>`;
+
+  // Mention volume comparison chart
+  html+=`<div class="card" style="margin-top:12px;"><div class="card-header"><span class="card-title"><i class="fas fa-chart-line"></i> Mentions Over Time</span></div><div class="chart-box"><canvas id="c-compare-vol"></canvas></div></div>`;
+  html+=`<div style="text-align:center;margin-top:12px;"><button class="btn btn-primary" onclick="openCompareModal()"><i class="fas fa-redo"></i> Compare Again</button></div>`;
+
+  area.innerHTML=html;
+
+  // Draw comparison chart
+  setTimeout(()=>{
+    const el=document.getElementById('c-compare-vol');if(!el)return;
+    const allDates=new Set();data.projects.forEach(p=>p.byDate.forEach(d=>allDates.add(d.date)));
+    const dates=[...allDates].sort();
+    Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});charts={};
+    charts.compareVol=new Chart(el,{type:'line',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:data.projects.map(p=>{const dm={};p.byDate.forEach(d=>dm[d.date]=d.count);return{label:p.project.name,data:dates.map(d=>dm[d]||0),borderColor:p.project.color,backgroundColor:p.project.color+'20',fill:false,tension:0.4};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});
+  },100);
+}
+
+// ===== SCRAPING =====
+let scrapeGapInfo = null;
+
+async function openScrapeModal(){
+  if(!currentProject){toast('error','Error','Pilih project dulu');return;}
+  document.getElementById('scrape-project-name').textContent=currentProject.name;
+  
+  // Reset to incremental mode
+  document.querySelector('input[name="scrape-mode"][value="incremental"]').checked = true;
+  updateScrapeMode();
+  
+  // Fetch gap info from backend
+  try {
+    const res = await fetch(`${API}/checkpoints/${currentProject.id}/gap`);
+    scrapeGapInfo = await res.json();
+    
+    const statusBox = document.getElementById('scrape-status-box');
+    const infoEl = document.getElementById('scrape-last-info');
+    
+    if (scrapeGapInfo.is_first_scrape) {
+      statusBox.style.display = 'block';
+      infoEl.innerHTML = `<span style="color:var(--yellow)"><i class="fas fa-exclamation-triangle"></i> Belum pernah scrape. Pilih range tanggal awal.</span>`;
+      // Switch to custom mode for first scrape
+      document.querySelector('input[name="scrape-mode"][value="custom"]').checked = true;
+      updateScrapeMode();
+    } else if (scrapeGapInfo.gap_days > 0) {
+      statusBox.style.display = 'block';
+      infoEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><strong>Terakhir:</strong> ${scrapeGapInfo.last_date}</div>
+          <div><strong>Gap:</strong> <span style="color:var(--green)">${scrapeGapInfo.gap_days} hari</span></div>
+          <div><strong>Hari ini:</strong> ${scrapeGapInfo.today}</div>
+          <div><strong>Akan scrape:</strong> ${scrapeGapInfo.suggested_from} → ${scrapeGapInfo.today}</div>
+        </div>
+      `;
+    } else {
+      statusBox.style.display = 'block';
+      infoEl.innerHTML = `<span style="color:var(--green)"><i class="fas fa-check-circle"></i> Data sudah up-to-date! Terakhir: ${scrapeGapInfo.last_date}</span>`;
+    }
+  } catch(e) {
+    console.error('Gap check error:', e);
+    scrapeGapInfo = { is_first_scrape: true };
+  }
+  
+  // Set default dates for custom mode
+  const d=new Date();const f=new Date();f.setDate(f.getDate()-7);
+  document.getElementById('sc-from').value=f.toISOString().split('T')[0];
+  document.getElementById('sc-to').value=d.toISOString().split('T')[0];
+  
+  openModal('modal-scrape');
+}
+
+function updateScrapeMode() {
+  const mode = document.querySelector('input[name="scrape-mode"]:checked').value;
+  const customGroup = document.getElementById('custom-date-group');
+  const modeHint = document.getElementById('mode-hint');
+  
+  document.querySelectorAll('input[name="scrape-mode"]').forEach(r => {
+    r.closest('.plat-toggle').classList.toggle('active', r.checked);
+  });
+  
+  if (mode === 'incremental') {
+    customGroup.style.display = 'none';
+    modeHint.textContent = 'Scrape data baru sejak terakhir kali update. Hemat token!';
+  } else {
+    customGroup.style.display = 'block';
+    modeHint.textContent = 'Pilih range tanggal secara manual. Cocok untuk scrape awal atau re-scrape.';
+  }
+}
+
+async function startScraping(){
+  closeModal('modal-scrape');
+  const token=await getToken();
+  const maxR=parseInt(document.getElementById('sc-max').value);
+  const mode = document.querySelector('input[name="scrape-mode"]:checked').value;
+  
+  let scFrom, scTo;
+  if (mode === 'incremental' && scrapeGapInfo && !scrapeGapInfo.is_first_scrape) {
+    if (scrapeGapInfo.gap_days <= 0) {
+      toast('info', 'Sudah Update', 'Data sudah up-to-date, tidak perlu scrape baru');
+      return;
+    }
+    scFrom = scrapeGapInfo.suggested_from;
+    scTo = scrapeGapInfo.today;
+  } else {
+    scFrom = document.getElementById('sc-from').value;
+    scTo = document.getElementById('sc-to').value;
+  }
+  
+  if (!scFrom || !scTo) {
+    toast('error', 'Error', 'Pilih tanggal terlebih dahulu');
+    return;
+  }
+  
+  const kws=Array.isArray(currentProject.keywords)?currentProject.keywords:[currentProject.keywords];
+  const plats=Array.isArray(currentProject.platforms)?currentProject.platforms:JSON.parse(currentProject.platforms||'[]');
+
+  const needsApify=plats.some(p=>p!=='tiktok');
+  if(needsApify&&!token){toast('error','Token Required','Set Apify token di Settings');openModal('modal-settings');return;}
+
+  // Create session
+  let sessionId=null;
+  try{const r=await fetch(`${API}/sessions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:currentProject.id,platforms:plats,date_from:scFrom,date_to:scTo,max_results:maxR})});const s=await r.json();sessionId=s.id;}catch(e){}
+
+  // Calculate days for info only
+  const daysDiff = Math.ceil((new Date(scTo) - new Date(scFrom)) / (1000*60*60*24)) + 1;
+
+  // Progress
+  const pp=document.getElementById('progress-panel');pp.style.display='block';
+  const bar=document.getElementById('progress-bar');const pct=document.getElementById('progress-pct');
+  const steps=document.getElementById('progress-steps');
+  
+  steps.innerHTML=`
+    <div style="margin-bottom:8px;font-size:10px;color:var(--text-2);">
+      Scraping ${daysDiff} hari (${scFrom} → ${scTo}) × ${plats.length} platform × ${kws.length} keywords
+    </div>
+    ${plats.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:var(--bg-elevated);border-radius:5px;font-size:10px;" id="step-${p}"><span style="width:10px;height:10px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></span>${p} <span id="count-${p}">0</span></span>`).join('')}
+  `;
+
+  let completed=0;let allPosts=[];
+  const totalSteps = plats.length;
+
+  for(const platform of plats){
+    const stepEl=document.getElementById(`step-${platform}`);
+    const countEl=document.getElementById(`count-${platform}`);
+    let platformPosts=[];
+    
+    try{
+      // Single API call per platform per keyword with full date range
+      for(const kw of kws){
+        try{
+          let data=[];
+          switch(platform){
+            case 'tiktok':data=await fetchTikTok(kw,maxR,scFrom,scTo);break;
+            case 'twitter':data=await fetchTwitter(token,kw,maxR,scFrom,scTo);break;
+            case 'instagram':data=await fetchInstagram(token,kw,maxR,scFrom,scTo);break;
+            case 'facebook':data=await fetchFacebook(token,kw,maxR,scFrom,scTo);break;
+            case 'youtube':data=await fetchYouTube(token,kw,maxR,scFrom,scTo);break;
+            case 'news':data=await fetchNews(token,kw,maxR,scFrom,scTo);break;
+          }
+          data.forEach(p=>{p.sentiment=sentiment(p.content);p.cities=findCities(p.content);p.hashtags=findTags(p.content);p.keyword_matched=kw;});
+          platformPosts=[...platformPosts,...data];
+          if(countEl)countEl.textContent=platformPosts.length;
+        }catch(e){console.log(`${platform}/${kw} error:`,e.message);}
+      }
+
+      // Save to DB
+      if(sessionId&&platformPosts.length>0){
+        try{await fetch(`${API}/posts/bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,project_id:currentProject.id,posts:platformPosts.map(p=>({external_id:p.id,platform:p.platform,keyword_matched:p.keyword_matched,author:p.author,handle:p.handle,avatar:p.avatar,content:p.content,views:p.views,likes:p.likes,shares:p.shares,comments:p.comments,sentiment:p.sentiment,cities:p.cities,hashtags:p.hashtags,source_name:p.source,url:p.url,post_date:p.timestamp?.toISOString()}))})});}catch(e){console.log('DB save error:',e);}
+      }
+      
+      // Update checkpoint for each keyword
+      for(const kw of kws){
+        try{await fetch(`${API}/checkpoints`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:currentProject.id,platform,keyword:kw,last_scraped_date:scTo,posts_count:platformPosts.filter(p=>p.keyword_matched===kw).length})});}catch(e){}
+      }
+
+      allPosts=[...allPosts,...platformPosts];
+      if(stepEl){stepEl.style.background='var(--green)';stepEl.innerHTML=`<i class="fas fa-check"></i> ${platform} (${platformPosts.length})`;}
+      toast('success',`${platform} Done`,`${platformPosts.length} results`);
+    }catch(e){
+      if(stepEl){stepEl.style.background='var(--red)';stepEl.innerHTML=`<i class="fas fa-times"></i> ${platform}`;}
+      toast('error',`${platform} Error`,(e.message||'').substring(0,50));
+    }
+    completed++;bar.style.width=Math.round((completed/totalSteps)*100)+'%';pct.textContent=Math.round((completed/totalSteps)*100)+'%';
+  }
+
+  if(sessionId){try{await fetch(`${API}/sessions/${sessionId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'done',total_results:allPosts.length})});}catch(e){}}
+
+  setTimeout(()=>{pp.style.display='none';},1500);
+  toast('success','Scraping Selesai!',`${allPosts.length} mentions dari ${scFrom} sampai ${scTo}`);
+  await loadProjects();
+  selectProject(projects.find(p=>p.id===currentProject.id)||currentProject);
+}
+
+// ===== PLATFORM FETCH FUNCTIONS =====
+// IMPORTANT: No date filtering during scrape! Database handles deduplication via external_id
+// Date filtering is ONLY for dashboard display, not for data collection
+
+async function fetchTikTok(kw,max,from,to){
+  const url=`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(kw)}&count=${max}&cursor=0&web=1&hd=1`;
+  console.log('TikTok fetch:', url);
+  const r=await fetch(url);
+  const d=await r.json();
+  console.log('TikTok response:', d);
+  if(d.code!==0||!d.data?.videos){
+    console.error('TikTok error:', d.msg);
+    throw new Error(d.msg||'No data');
+  }
+  
+  // NO DATE FILTERING - collect all data, database will deduplicate by external_id
+  const results = d.data.videos.map(v=>{
+    let av=v.author?.avatar||'';
+    if(av&&!av.startsWith('http'))av='https://www.tikwm.com'+av;
+    // create_time is Unix timestamp in seconds
+    const ts=v.create_time?new Date(v.create_time*1000):new Date();
+    return{
+      id:v.video_id||v.id,
+      platform:'tiktok',
+      author:v.author?.nickname||'Unknown',
+      handle:'@'+(v.author?.unique_id||'user'),
+      avatar:av,
+      content:v.title||'',
+      views:v.play_count||0,
+      likes:v.digg_count||0,
+      shares:v.share_count||0,
+      comments:v.comment_count||0,
+      timestamp:ts,
+      url:`https://tiktok.com/@${v.author?.unique_id}/video/${v.video_id||v.id}`,
+      source:'TikTok'
+    };
+  });
+  
+  console.log(`TikTok: ${results.length} posts collected (no date filter - DB will dedupe)`);
+  return results;
+}
+
+async function fetchApify(token,actor,input){const r=await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${token}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});if(!r.ok)throw new Error(await r.text());return await r.json();}
+
+// Twitter - no date filter in scraping, collect all
+async function fetchTwitter(token,kw,max,from,to){
+  const d=await fetchApify(token,'kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest',{searchTerms:[kw],maxTweets:max,maxItems:max,sort:'Latest'});
+  return d.filter(t=>{const x=t.text||t.full_text||'';return!x.includes('KaitoEasyAPI')&&t.id!==-1&&t.id!=='-1';}).map(t=>{
+    let h='user';if(t.url)h=t.url.split('/')[3]||'user';
+    let ts=new Date();try{if(t.createdAt)ts=new Date(t.createdAt);}catch{}
+    return{id:t.id||Math.random().toString(36),platform:'twitter',author:t['author.name']||t.author?.name||h,handle:'@'+h,avatar:t['author.profilePicture']||t.author?.profilePicture,content:t.text||t.full_text||'',views:t.viewCount||0,likes:t.likeCount||0,shares:t.retweetCount||0,comments:t.replyCount||0,timestamp:ts,url:t.url||'',source:'Twitter'};
+  });
+}
+
+// Instagram - no date filter in scraping
+async function fetchInstagram(token,kw,max,from,to){
+  const ht=kw.replace(/\s+/g,'').replace(/[^a-zA-Z0-9_]/g,'');
+  const d=await fetchApify(token,'apify~instagram-hashtag-scraper',{hashtags:[ht],resultsLimit:max,resultsType:'posts'});
+  return d.filter(p=>!p.error&&p.type!=='error').map(p=>{
+    let ts=new Date();try{if(p.timestamp&&!isNaN(p.timestamp))ts=new Date(p.timestamp*1000);else if(p.taken_at&&!isNaN(p.taken_at))ts=new Date(p.taken_at*1000);}catch{}
+    return{id:p.id||p.shortCode||Math.random().toString(36),platform:'instagram',author:p.ownerUsername||'Unknown',handle:'@'+(p.ownerUsername||'user'),avatar:p.profilePicUrl,content:p.caption||p.text||'',views:p.videoViewCount||0,likes:p.likesCount||0,shares:0,comments:p.commentsCount||0,timestamp:ts,url:p.url||`https://instagram.com/p/${p.shortCode}`,source:'Instagram'};
+  });
+}
+
+// Facebook - no date filter in scraping
+async function fetchFacebook(token,kw,max,from,to){
+  const d=await fetchApify(token,'easyapi~facebook-posts-search-scraper',{query:kw,maxResults:max});
+  return d.filter(p=>!p.error).map(p=>{
+    let ts=new Date();try{if(p.timestamp)ts=new Date(p.timestamp);else if(p.time)ts=new Date(p.time);else if(p.date)ts=new Date(p.date);}catch{}
+    return{id:p.post_id||p.id||Math.random().toString(36),platform:'facebook',author:p.author_name||p.name||'Unknown',handle:p.author_url||'',avatar:p.author_image||null,content:p.text||p.message||'',views:p.views||0,likes:p.likes||p.reactions||0,shares:p.shares||0,comments:p.comments||0,timestamp:ts,url:p.url||p.post_url||'',source:p.page_name||'Facebook'};
+  });
+}
+
+// YouTube - no date filter in scraping
+async function fetchYouTube(token,kw,max,from,to){
+  const input={searchKeywords:kw,maxResults:max};
+  const d=await fetchApify(token,'streamers~youtube-scraper',input);
+  return d.map(v=>{
+    let ts=new Date();try{if(v.date)ts=new Date(v.date);else if(v.uploadDate)ts=new Date(v.uploadDate);}catch{}
+    return{id:v.id||Math.random().toString(36),platform:'youtube',author:v.channelName||'Unknown',handle:v.channelUrl||'',avatar:v.channel?.thumbnail||null,content:v.title||'',views:v.viewCount||v.views||0,likes:v.likes||0,shares:0,comments:v.numberOfComments||0,timestamp:ts,url:v.url||'',source:v.channelName||'YouTube'};
+  });
+}
+
+// News - no date filter in scraping
+async function fetchNews(token,kw,max,from,to){
+  const input={queries:kw,resultsPerPage:max,mobileResults:false,languageCode:'id',countryCode:'id',searchType:'news'};
+  const d=await fetchApify(token,'apify~google-search-scraper',input);
+  const res=d[0]?.organicResults||d||[];
+  return res.filter(n=>n&&n.url).map(n=>{
+    let ts=new Date();try{if(n.date)ts=new Date(n.date);}catch{}
+    let src='News';try{src=n.source||new URL(n.url).hostname.replace('www.','');}catch{}
+    return{id:n.url||Math.random().toString(36),platform:'news',author:src,handle:src,avatar:null,content:(n.title||'')+(n.description?' - '+n.description:''),views:0,likes:0,shares:0,comments:0,timestamp:ts,url:n.url||'',source:src};
+  });
+}
+
+// ===== EXPORTS =====
+function exportCSV(){if(posts.length===0){toast('error','Error','No data');return;}const h=['Platform','Author','Content','Views','Likes','Shares','Sentiment','Source','URL','Date'];const rows=posts.map(p=>[p.platform,p.author,`"${(p.content||'').replace(/"/g,'""').replace(/\n/g,' ')}"`,p.views,p.likes,p.shares,p.sentiment,p.source_name||'',p.url||'',p.post_date||'']);const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`socialpulse_${currentProject?.name||'export'}_${new Date().toISOString().split('T')[0]}.csv`;a.click();toast('success','Exported!',`${posts.length} records`);}
+
+async function generatePDF(){
+  if(posts.length===0){toast('error','Error','No data for report');return;}
+  toast('info','Generating PDF...','Menggunakan AI untuk narasi profesional...');
+  
+  const keyword = currentProject?.name || 'Report';
+  const formatNum = n => {if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return(n||0).toString();};
+  const formatPct = (n,t) => Math.round((n/(t||1))*100);
+  
+  // ===== CALCULATE ALL STATS =====
+  const stats = {total:posts.length,views:0,likes:0,shares:0,comments:0,positive:0,negative:0,neutral:0};
+  const platforms = {};const keywords = {};const sources = {};const cities = {};const authorMap = {};
+  const dateMap = {};const platSentiment = {};const dailyMentions = {};
+  
+  posts.forEach(p => {
+    stats.views += p.views||0;stats.likes += p.likes||0;stats.shares += p.shares||0;stats.comments += p.comments||0;
+    stats[p.sentiment||'neutral']++;
+    platforms[p.platform] = (platforms[p.platform]||0)+1;
+    if(p.source_name) sources[p.source_name] = (sources[p.source_name]||0)+1;
+    const tags = (p.content||'').match(/#[\w\d_]+/gi)||[];
+    tags.forEach(t => keywords[t.toLowerCase()] = (keywords[t.toLowerCase()]||0)+1);
+    const postCities = p.cities ? (Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')) : findCities(p.content);
+    postCities.forEach(c => cities[c] = (cities[c]||0)+1);
+    if(!authorMap[p.author])authorMap[p.author]={views:0,posts:0,positive:0,negative:0,neutral:0,platform:p.platform,likes:0,shares:0,comments:0};
+    authorMap[p.author].views+=p.views||0;authorMap[p.author].posts++;authorMap[p.author][p.sentiment||'neutral']++;
+    authorMap[p.author].likes+=p.likes||0;authorMap[p.author].shares+=p.shares||0;authorMap[p.author].comments+=p.comments||0;
+    if(!platSentiment[p.platform])platSentiment[p.platform]={positive:0,negative:0,neutral:0};
+    platSentiment[p.platform][p.sentiment||'neutral']++;
+    const day = p.timestamp ? new Date(p.timestamp).toISOString().split('T')[0] : 'unknown';
+    if(!dailyMentions[day])dailyMentions[day]={};
+    dailyMentions[day][p.platform] = (dailyMentions[day][p.platform]||0)+1;
+  });
+  
+  const total = stats.total||1;
+  const engagement = stats.likes+stats.comments+stats.shares;
+  const avgEngPerPost = Math.round(engagement/total);
+  const platEntries = Object.entries(platforms).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const maxPlat = Math.max(...platEntries.map(([,v])=>v),1);
+  const topInfluencers = Object.entries(authorMap).sort((a,b)=>b[1].views-a[1].views).slice(0,10);
+  const sortedKeywords = Object.entries(keywords).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const sortedCities = Object.entries(cities).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const sortedSources = Object.entries(sources).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const totalReach = topInfluencers.reduce((s,[,d])=>s+d.views,0)||1;
+  const posPct = formatPct(stats.positive,total);
+  const negPct = formatPct(stats.negative,total);
+  const neuPct = formatPct(stats.neutral,total);
+  const topPlat = platEntries[0]?.[0]||'unknown';
+  const sentScore = stats.positive - stats.negative;
+  
+  // ===== CALL OPENROUTER AI FOR NARRATIVE =====
+  let aiData = null;
+  try {
+    const orToken = await getORToken();
+    if(orToken){
+      toast('info','AI Writing...','Generating narrative content with AI...');
+      const dataSummary = `Keyword: ${keyword}\nPeriode: ${dateFrom} sampai ${dateTo}\nTotal Mentions: ${stats.total}\nTotal Views/Reach: ${stats.views}\nTotal Likes: ${stats.likes} | Shares: ${stats.shares} | Comments: ${stats.comments}\nAvg Engagement per post: ${avgEngPerPost}\nSentimen: Positif ${stats.positive} (${posPct}%), Netral ${stats.neutral} (${neuPct}%), Negatif ${stats.negative} (${negPct}%)\nSentiment Score: ${sentScore>=0?'+':''}${sentScore}\nPlatform: ${platEntries.map(([p,c])=>p+' '+c+' ('+formatPct(c,total)+'%)').join(', ')}\nPlatform Sentiment: ${Object.entries(platSentiment).map(([p,s])=>p+': positif '+s.positive+' netral '+s.neutral+' negatif '+s.negative).join(', ')}\nTop Hashtags: ${sortedKeywords.slice(0,15).map(([h,c])=>h+' ('+c+')').join(', ')}\nTop Influencers: ${topInfluencers.map(([n,d])=>n+' ('+d.views+' views, '+d.posts+' posts, '+d.platform+', SOV: '+Math.round(d.views/totalReach*100)+'%)').join(', ')}\nTop Cities: ${sortedCities.map(([c,n])=>c+' ('+n+')').join(', ')}\nTop Content: ${[...posts].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8).map(p=>p.author+' ['+p.platform+'] '+(p.content||'').substring(0,80)+' ('+p.views+' views, '+p.sentiment+')').join(' | ')}`;
+      const sysPrompt = `Kamu adalah analis media sosial profesional senior. Buat analisis mendalam dalam Bahasa Indonesia untuk laporan PDF klien. Format output HARUS JSON valid tanpa backticks:\n{"executive_summary":"3-5 paragraf analisis mendalam tentang performa brand termasuk metrik utama, tren, dan insight. Gunakan data spesifik dan angka dari data yang diberikan. Tulis seperti laporan konsultan profesional.","tren_mentions":"2-3 paragraf tentang tren mentions harian, kapan puncak terjadi, apa pemicunya, dan pola yang terlihat.","analisis_engagement":"2 paragraf tentang engagement rate, perbandingan likes vs comments vs shares, dan apa artinya untuk brand.","analisis_sentiment":"2-3 paragraf mendalam tentang distribusi sentimen, per platform, driver sentimen positif, dan potensi risiko negatif.","analisis_platform":"2 paragraf tentang distribusi platform, mana yang dominan, mana yang perlu dikembangkan.","analisis_influencer":"2 paragraf tentang top influencers, ketergantungan pada influencer tertentu, dan rekomendasi.","analisis_hashtag":"1-2 paragraf tentang trending hashtags dan bagaimana memanfaatkannya.","analisis_lokasi":"1 paragraf tentang distribusi geografis mentions.","swot":{"strengths":["3-4 poin detail dengan data spesifik"],"weaknesses":["3-4 poin detail"],"opportunities":["3-4 poin detail"],"threats":["3-4 poin detail"]},"recommendations":["6 rekomendasi strategis detail dengan penjelasan actionable masing-masing 2-3 kalimat"],"key_findings":["5-6 temuan utama dengan angka spesifik"]}`;
+      const resp = await callOpenRouter(sysPrompt, 'Analisis data social media monitoring berikut:\n\n'+dataSummary);
+      if(resp){
+        try{
+          const cleaned = resp.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+          aiData = JSON.parse(cleaned);
+        }catch(e){
+          const jsonMatch = resp.match(/\{[\s\S]*\}/);
+          if(jsonMatch) aiData = JSON.parse(jsonMatch[0]);
+        }
+      }
+    }
+  }catch(e){ console.warn('AI analysis failed, using auto-generated text:', e); }
+  
+  // ===== AUTO-GENERATE FALLBACK TEXT =====
+  if(!aiData) {
+    aiData = {
+      executive_summary: `${keyword} mencatatkan ${stats.total} mentions dengan social media reach ${formatNum(stats.views)} selama periode ${dateFrom} sampai ${dateTo}. Sentimen ${posPct>=50?'positif mendominasi':'cenderung netral'} dengan ${stats.positive} mentions positif (${posPct}%)${negPct===0?' dan nol mentions negatif \u2014 pencapaian yang sangat baik':' serta '+stats.negative+' mentions negatif ('+negPct+'%)'}. ${platEntries[0]?.[0]?.charAt(0).toUpperCase()+platEntries[0]?.[0]?.slice(1)||'Platform utama'} menjadi platform dominan dengan ${platEntries[0]?.[1]||0} mentions (${formatPct(platEntries[0]?.[1]||0,total)}% total). Average engagement per post mencapai ${avgEngPerPost} interactions.\n\nTop influencer ${topInfluencers[0]?.[0]||'N/A'} menyumbang ${formatNum(topInfluencers[0]?.[1]?.views||0)} views dengan Share of Voice ${Math.round((topInfluencers[0]?.[1]?.views||0)/totalReach*100)}%.`,
+      tren_mentions: `Volume mentions ${keyword} menunjukkan aktivitas yang bervariasi sepanjang periode monitoring. Total ${stats.total} mentions tersebar di ${Object.keys(platforms).filter(p=>platforms[p]>0).length} platform berbeda.`,
+      analisis_engagement: `Total engagement mencapai ${formatNum(engagement)} interactions dari ${stats.total} mentions. Breakdown: ${formatNum(stats.likes)} likes, ${formatNum(stats.comments)} comments, dan ${formatNum(stats.shares)} shares. Average engagement per post: ${avgEngPerPost} interactions.`,
+      analisis_sentiment: `Distribusi sentimen menunjukkan ${posPct}% positif, ${neuPct}% netral, dan ${negPct}% negatif${negPct===0?'. Zero negative mentions merupakan pencapaian luar biasa':''}.`,
+      analisis_platform: `${platEntries[0]?.[0]||'Platform'} mendominasi dengan ${formatPct(platEntries[0]?.[1]||0,total)}% total mentions. ${platEntries.length>1?platEntries[1][0]+' menjadi platform kedua dengan '+platEntries[1][1]+' mentions.':''}`,
+      analisis_influencer: `${topInfluencers[0]?.[0]||'Top influencer'} memimpin dengan ${formatNum(topInfluencers[0]?.[1]?.views||0)} views dan SOV ${Math.round((topInfluencers[0]?.[1]?.views||0)/totalReach*100)}%.`,
+      analisis_hashtag: `Hashtag utama ${sortedKeywords[0]?.[0]||'N/A'} mendominasi dengan ${sortedKeywords[0]?.[1]||0} mentions.`,
+      analisis_lokasi: `Aktivitas terkonsentrasi di ${sortedCities.length>0?sortedCities[0][0]:'kota-kota utama'}.`,
+      swot: {
+        strengths: [`Sentimen positif ${posPct}%${negPct===0?' dengan zero negatif':''}`,`${formatNum(stats.views)} total reach`,`Top influencer: ${topInfluencers[0]?.[0]||'N/A'}`],
+        weaknesses: [`Engagement rate bisa ditingkatkan`,`Ketergantungan pada top influencer`,`Platform belum diversified`],
+        opportunities: [`Ekspansi ke platform yang belum aktif`,`Manfaatkan trending hashtag: ${sortedKeywords[0]?.[0]||'N/A'}`,`Perkuat kehadiran di kota utama`],
+        threats: [`Kompetitor bisa meningkatkan presence`,`Perubahan algoritma platform`,`Potensi sentimen negatif`]
+      },
+      recommendations: [
+        `Optimalkan konten di ${topPlat} yang mendominasi ${formatPct(platEntries[0]?.[1]||0,total)}% mentions.`,
+        `Perluas influencer pool untuk diversifikasi share of voice.`,
+        `Manfaatkan trending hashtag ${sortedKeywords[0]?.[0]||'N/A'} untuk kampanye.`,
+        `Diversifikasi platform untuk mengurangi risiko.`,
+        `Tingkatkan engagement rate dengan konten interaktif.`,
+        `Perkuat media coverage non-social media.`
+      ],
+      key_findings: [
+        `Total ${stats.total} mentions di ${Object.keys(platforms).filter(p=>platforms[p]>0).length} platform.`,
+        `Platform terbesar: ${topPlat} (${platEntries[0]?.[1]||0} posts, ${formatPct(platEntries[0]?.[1]||0,total)}%).`,
+        `Sentimen: ${posPct}% positif, ${neuPct}% netral, ${negPct}% negatif.`,
+        `Top reach: ${topInfluencers[0]?.[0]||'N/A'} dengan ${formatNum(topInfluencers[0]?.[1]?.views||0)} views.`
+      ]
+    };
+  }
+  
+  // ===== JSPDF SETUP — WHITE CLEAN THEME =====
+  const{jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4');
+  const pw=210,ph=297,m=18;
+  
+  // White theme colors
+  const black=[30,30,30],darkGray=[51,51,51],midGray=[102,102,102],lightGray=[153,153,153];
+  const borderGray=[200,200,200],headerBg=[245,245,245],white=[255,255,255];
+  const green=[76,175,80],red=[231,76,60],yellow=[245,166,35];
+  const accent=[93,165,218],accentDark=[59,125,216];
+  const chartBlue=[135,206,235],chartOrange=[245,133,75];
+  const sentGreen=[76,175,80],sentBlueNeu=[176,196,222],sentRed=[231,76,60];
+  const pieIG=[93,165,218],pieTT=[231,76,60],pieFB=[46,139,87],pieVid=[85,85,85],pieNews=[218,165,32];
+  const barSteel=[70,130,180],barGreen=[76,175,80];
+  const tiktok=[0,242,234],twitter=[29,161,242],instagram=[225,48,108];
+  const facebook=[24,119,242],youtube=[255,0,0],news=[249,115,22];
+  const platformColors={tiktok,twitter,instagram,facebook,youtube,news};
+  
+  const setC=c=>doc.setTextColor(c[0],c[1],c[2]);
+  const setF=c=>doc.setFillColor(c[0],c[1],c[2]);
+  const setD=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  let pageNum=0;
+  const TP=16;
+  let curY=0;
+
+  // ===== HELPER: Draw page (white background) =====
+  const drawPage=(title,pn)=>{
+    if(pn>1)doc.addPage();
+    pageNum=pn;
+    // White background (default, no need to fill)
+    // Page footer
+    doc.setFontSize(7);setC(lightGray);
+    doc.text(`SocialPulse Pro | ${keyword} | ${dateFrom} - ${dateTo} | Halaman ${pn}/${TP}`,pw/2,ph-10,{align:'center'});
+    curY=22;
+  };
+  
+  // ===== HELPER: Draw heading =====
+  const drawH1=(text)=>{
+    doc.setFontSize(20);doc.setFont('helvetica','bold');setC(black);
+    doc.text(text,m,curY);curY+=10;
+  };
+  const drawH2=(text)=>{
+    doc.setFontSize(15);doc.setFont('helvetica','bold');setC(black);
+    doc.text(text,m,curY);curY+=8;
+  };
+  const drawH3=(text)=>{
+    doc.setFontSize(12);doc.setFont('helvetica','bold');setC(black);
+    doc.text(text,m,curY);curY+=7;
+  };
+  
+  // ===== HELPER: Draw paragraph (dark text on white) =====
+  const drawPara=(text,fontSize=9,lineH=4.2)=>{
+    doc.setFontSize(fontSize);doc.setFont('helvetica','normal');setC(darkGray);
+    const lines=doc.splitTextToSize(text||'',pw-2*m);
+    lines.forEach((line,i)=>{
+      if(curY>ph-18){doc.addPage();curY=20;setC(darkGray);doc.setFontSize(fontSize);}
+      doc.text(line,m,curY);curY+=lineH;
+    });
+    curY+=2;
+  };
+  
+  // ===== HELPER: Draw bullet point =====
+  const drawBullet=(text,fontSize=9)=>{
+    doc.setFontSize(fontSize);doc.setFont('helvetica','normal');setC(darkGray);
+    const lines=doc.splitTextToSize('\u2022  '+text,pw-2*m-5);
+    lines.forEach((line,i)=>{
+      if(curY>ph-18){doc.addPage();curY=20;setC(darkGray);doc.setFontSize(fontSize);}
+      doc.text(line,m+3,curY);curY+=4.2;
+    });
+    curY+=1;
+  };
+  
+  // ===== HELPER: Draw bold bullet =====
+  const drawBoldBullet=(boldPart,normalPart,fontSize=9)=>{
+    doc.setFontSize(fontSize);
+    const fullText='\u2022  '+boldPart+normalPart;
+    const lines=doc.splitTextToSize(fullText,pw-2*m-5);
+    // First line: draw bullet + bold part
+    setC(darkGray);doc.setFont('helvetica','normal');
+    doc.text('\u2022  ',m+3,curY);
+    const bw=doc.getStringUnitWidth('\u2022  ')*fontSize/doc.internal.scaleFactor;
+    doc.setFont('helvetica','bold');doc.text(boldPart,m+3+bw,curY);
+    const bw2=doc.getStringUnitWidth(boldPart)*fontSize/doc.internal.scaleFactor;
+    doc.setFont('helvetica','normal');
+    // Remaining text on first line
+    const remainFirst=lines[0].substring(('\u2022  '+boldPart).length);
+    if(remainFirst)doc.text(remainFirst,m+3+bw+bw2,curY);
+    curY+=4.2;
+    // Rest of lines
+    lines.slice(1).forEach(line=>{
+      if(curY>ph-18){doc.addPage();curY=20;}
+      setC(darkGray);doc.setFont('helvetica','normal');doc.setFontSize(fontSize);
+      doc.text(line,m+3,curY);curY+=4.2;
+    });
+    curY+=1;
+  };
+  
+  // ===== HELPER: Draw clean table =====
+  const drawTable=(headers,rows,colWidths)=>{
+    const rowH=7;const totalW=colWidths.reduce((a,b)=>a+b,0);
+    const needH=(rows.length+1)*rowH+4;
+    if(curY+needH>ph-20){doc.addPage();curY=20;}
+    let x=m;
+    // Header bg
+    setF(headerBg);doc.rect(m,curY-5,totalW,rowH,'F');
+    setD(borderGray);doc.setLineWidth(0.3);
+    doc.line(m,curY-5,m+totalW,curY-5);
+    doc.line(m,curY+rowH-5,m+totalW,curY+rowH-5);
+    // Header text
+    doc.setFontSize(8);doc.setFont('helvetica','bold');setC(black);
+    headers.forEach((h,i)=>{doc.text(h,x+3,curY);x+=colWidths[i];});
+    curY+=rowH;
+    // Rows
+    rows.forEach((row,ri)=>{
+      x=m;
+      doc.setFont('helvetica','normal');doc.setFontSize(8);setC(darkGray);
+      row.forEach((cell,ci)=>{doc.text(String(cell||''),x+3,curY);x+=colWidths[ci];});
+      setD(borderGray);doc.line(m,curY+rowH-5,m+totalW,curY+rowH-5);
+      curY+=rowH;
+    });
+    curY+=5;
+  };
+  
+  // ===== HELPER: Draw separator line =====
+  const drawSep=()=>{setD(borderGray);doc.setLineWidth(0.5);doc.line(m,curY,pw-m,curY);curY+=8;};
+  
+  // ===== HELPER: Draw line chart =====
+  const drawLineChart=(title,subtitle,labels,datasets,chartH=65)=>{
+    const chartW=pw-2*m-10;const chartX=m+10;const chartYTop=curY+5;
+    // Title
+    doc.setFontSize(11);doc.setFont('helvetica','bold');setC(black);
+    doc.text(title,pw/2,curY,{align:'center'});curY+=5;
+    doc.setFontSize(7);setC(midGray);doc.text(subtitle,pw/2,curY,{align:'center'});curY+=8;
+    
+    const baseY=curY+chartH;
+    const maxVal=Math.max(...datasets.flatMap(d=>d.data),1);
+    // Y axis grid lines
+    for(let i=0;i<=4;i++){
+      const gy=curY+chartH-(i/4)*chartH;
+      setD([230,230,230]);doc.setLineWidth(0.2);doc.line(chartX,gy,chartX+chartW,gy);
+      doc.setFontSize(6);setC(lightGray);
+      doc.text(String(Math.round(maxVal*i/4)),chartX-2,gy+1,{align:'right'});
+    }
+    // Draw each dataset
+    datasets.forEach(ds=>{
+      setD(ds.color);doc.setLineWidth(ds.lineWidth||1.5);
+      for(let i=1;i<labels.length;i++){
+        const x1=chartX+(i-1)/(labels.length-1)*chartW;
+        const y1=baseY-(ds.data[i-1]/maxVal)*chartH;
+        const x2=chartX+i/(labels.length-1)*chartW;
+        const y2=baseY-(ds.data[i]/maxVal)*chartH;
+        doc.line(x1,y1,x2,y2);
+      }
+      // Dots
+      ds.data.forEach((v,i)=>{
+        const x=chartX+i/(labels.length-1)*chartW;
+        const y=baseY-(v/maxVal)*chartH;
+        setF(ds.color);doc.circle(x,y,1.2,'F');
+      });
+    });
+    // X labels
+    labels.forEach((l,i)=>{
+      const x=chartX+i/(labels.length-1)*chartW;
+      doc.setFontSize(7);setC(midGray);doc.text(l,x,baseY+5,{align:'center'});
+    });
+    // Legend
+    if(datasets.length>1){
+      let lx=m+10;
+      datasets.forEach(ds=>{
+        setF(ds.color);doc.rect(lx,baseY+8,5,3,'F');
+        doc.setFontSize(6);setC(midGray);doc.text(ds.label,lx+7,baseY+10.5);
+        lx+=doc.getStringUnitWidth(ds.label)*6/doc.internal.scaleFactor+14;
+      });
+    }
+    curY=baseY+16;
+  };
+  
+  // ===== HELPER: Draw horizontal bar chart =====
+  const drawHBarChart=(title,subtitle,items,barColor,chartH)=>{
+    doc.setFontSize(11);doc.setFont('helvetica','bold');setC(black);
+    doc.text(title,pw/2,curY,{align:'center'});curY+=5;
+    if(subtitle){doc.setFontSize(7);setC(midGray);doc.text(subtitle,pw/2,curY,{align:'center'});curY+=6;}
+    const maxV=Math.max(...items.map(i=>i.value),1);
+    items.forEach((item,i)=>{
+      if(curY>ph-20)return;
+      doc.setFontSize(8);setC(darkGray);doc.text(item.label,m,curY);
+      const barW=(item.value/maxV)*85;
+      setF(barColor);doc.rect(m+55,curY-3.5,barW,5,'F');
+      doc.setFontSize(7);setC(midGray);doc.text(String(item.value),m+55+barW+3,curY);
+      curY+=7.5;
+    });
+    curY+=5;
+  };
+  
+  // ===== HELPER: Draw stacked bar chart =====
+  const drawStackedBar=(title,subtitle,labels,posData,neuData,negData,chartH=65)=>{
+    const chartW=pw-2*m-10;const chartX=m+10;
+    doc.setFontSize(11);doc.setFont('helvetica','bold');setC(black);
+    doc.text(title,pw/2,curY,{align:'center'});curY+=5;
+    if(subtitle){doc.setFontSize(7);setC(midGray);doc.text(subtitle,pw/2,curY,{align:'center'});}curY+=6;
+    
+    const maxVal=Math.max(...labels.map((_,i)=>(posData[i]||0)+(neuData[i]||0)+(negData[i]||0)),1);
+    const barW=chartW/labels.length*0.6;
+    const baseY=curY+chartH;
+    // Grid
+    for(let i=0;i<=4;i++){
+      const gy=curY+chartH-(i/4)*chartH;
+      setD([230,230,230]);doc.setLineWidth(0.2);doc.line(chartX,gy,chartX+chartW,gy);
+      doc.setFontSize(6);setC(lightGray);doc.text(String(Math.round(maxVal*i/4)),chartX-2,gy+1,{align:'right'});
+    }
+    labels.forEach((l,i)=>{
+      const cx=chartX+(i+0.5)/labels.length*chartW;
+      const bx=cx-barW/2;
+      let by=baseY;
+      // Negative
+      if(negData[i]>0){const h=(negData[i]/maxVal)*chartH;by-=h;setF(sentRed);doc.rect(bx,by,barW,h,'F');}
+      // Neutral
+      if(neuData[i]>0){const h=(neuData[i]/maxVal)*chartH;by-=h;setF(sentBlueNeu);doc.rect(bx,by,barW,h,'F');}
+      // Positive
+      if(posData[i]>0){const h=(posData[i]/maxVal)*chartH;by-=h;setF(sentGreen);doc.rect(bx,by,barW,h,'F');}
+      doc.setFontSize(7);setC(midGray);doc.text(l,cx,baseY+5,{align:'center'});
+    });
+    // Legend
+    let lx=m+20;
+    [{c:sentRed,l:'Negatif'},{c:sentBlueNeu,l:'Netral'},{c:sentGreen,l:'Positif'}].forEach(lg=>{
+      setF(lg.c);doc.rect(lx,baseY+8,5,3,'F');
+      doc.setFontSize(7);setC(midGray);doc.text(lg.l,lx+7,baseY+10.5);lx+=25;
+    });
+    curY=baseY+16;
+  };
+  
+  // ===== HELPER: Draw pie chart =====
+  const drawPie=(cx,cy,r,slices,showLabel=true)=>{
+    let startAngle=-Math.PI/2;
+    slices.forEach(s=>{
+      const endAngle=startAngle+s.pct/100*Math.PI*2;
+      // Draw pie slice using many small triangles
+      setF(s.color);
+      for(let a=startAngle;a<endAngle;a+=0.05){
+        const a2=Math.min(a+0.06,endAngle);
+        const x1=cx+Math.cos(a)*r,y1=cy+Math.sin(a)*r;
+        const x2=cx+Math.cos(a2)*r,y2=cy+Math.sin(a2)*r;
+        doc.triangle(cx,cy,x1,y1,x2,y2,'F');
+      }
+      if(showLabel && s.pct>3){
+        const midA=(startAngle+endAngle)/2;
+        const lx=cx+Math.cos(midA)*r*0.6;
+        const ly=cy+Math.sin(midA)*r*0.6;
+        doc.setFontSize(7);doc.setFont('helvetica','bold');setC(white);
+        doc.text(s.label,lx,ly,{align:'center'});
+      }
+      startAngle=endAngle;
+    });
+  };
+
+  // =============================================
+  // PAGE 1: TITLE + EXECUTIVE SUMMARY
+  // =============================================
+  pageNum=1;
+  curY=55;
+  doc.setFontSize(24);doc.setFont('helvetica','bold');setC(black);
+  doc.text('Laporan Analisis Media Sosial',m,curY);curY+=12;
+  doc.text(keyword,m,curY);curY+=10;
+  doc.setFontSize(13);doc.setFont('helvetica','normal');setC(midGray);
+  doc.text(`Periode: ${dateFrom} \u2013 ${dateTo}`,m,curY);curY+=14;
+  
+  drawH2('Executive Summary');
+  drawPara(aiData.executive_summary);
+  curY+=4;
+  drawH2('Analisis Teknis Performa');
+  drawH3('Ringkasan Metrik Utama');
+  drawTable(
+    ['Metrik','Nilai','Perubahan vs Periode Sebelumnya'],
+    [
+      ['Total Mentions',formatNum(stats.total),`${stats.total>0?'':'N/A'}`],
+      ['Social Media Reach',formatNum(stats.views),''],
+      ['Total Interactions',formatNum(engagement),''],
+      ['Likes',formatNum(stats.likes),''],
+      ['Comments',formatNum(stats.comments),''],
+      ['Shares',formatNum(stats.shares),''],
+      ['User Generated Content',String(stats.total),''],
+      ['Presence Score','N/A',''],
+    ],
+    [70,50,54]
+  );
+  // Footer
+  doc.setFontSize(7);setC(lightGray);
+  doc.text(`SocialPulse Pro | ${keyword} | ${dateFrom} - ${dateTo} | Halaman 1/${TP}`,pw/2,ph-10,{align:'center'});
+
+  // =============================================
+  // PAGE 2: TREN MENTIONS & REACH
+  // =============================================
+  drawPage('',2);
+  drawH2('Tren Mentions Harian');
+  const sortedDays=Object.keys(dailyMentions).sort();
+  const dailyTotals=sortedDays.map(d=>Object.values(dailyMentions[d]).reduce((a,b)=>a+b,0));
+  const dayLabels=sortedDays.map(d=>{const p=d.split('-');return p[2]+'/'+p[1];});
+  
+  if(sortedDays.length>0){
+    drawLineChart('Tren Mentions Harian '+keyword,
+      `Periode ${dateFrom} - ${dateTo}`,
+      dayLabels,
+      [{data:dailyTotals,color:chartBlue,label:'Mentions',lineWidth:2}]
+    );
+  }
+  
+  drawPara(aiData.tren_mentions);
+  curY+=4;
+  
+  // Daily reach - calculate from posts
+  const dailyReach={};
+  posts.forEach(p=>{
+    const day=p.timestamp?new Date(p.timestamp).toISOString().split('T')[0]:'unknown';
+    dailyReach[day]=(dailyReach[day]||0)+(p.views||0);
+  });
+  const reachDays=Object.keys(dailyReach).sort();
+  const reachVals=reachDays.map(d=>dailyReach[d]);
+  const reachLabels=reachDays.map(d=>{const p=d.split('-');return p[2]+'/'+p[1];});
+  
+  if(reachDays.length>0){
+    drawH2('Tren Reach Harian');
+    drawLineChart('Tren Reach Harian '+keyword,
+      `Periode ${dateFrom} - ${dateTo}`,
+      reachLabels,
+      [{data:reachVals,color:chartOrange,label:'Reach',lineWidth:2}]
+    );
+  }
+  
+  // =============================================
+  // PAGE 3: ENGAGEMENT + PLATFORM
+  // =============================================
+  drawPage('',3);
+  drawH2('Analisis Engagement');
+  drawPara(aiData.analisis_engagement);
+  curY+=3;
+  drawSep();
+  
+  drawH1('Distribusi Platform');
+  drawH3('Breakdown per Platform');
+  
+  // Pie chart for platform
+  const pieCx=pw/2,pieCy=curY+30,pieR=25;
+  const platColors=[pieIG,pieTT,pieFB,pieVid,pieNews,[100,100,100]];
+  const platSlices=platEntries.slice(0,6).map(([p,c],i)=>({
+    label:p.charAt(0).toUpperCase()+p.slice(1)+'\n'+formatPct(c,total)+'%',
+    pct:formatPct(c,total),
+    color:platColors[i]||[150,150,150]
+  }));
+  if(platSlices.length>0) drawPie(pieCx,pieCy,pieR,platSlices);
+  
+  // Legend below pie
+  curY=pieCy+pieR+8;
+  let legendX=m+20;
+  platEntries.slice(0,6).forEach(([p,c],i)=>{
+    setF(platColors[i]||[150,150,150]);doc.rect(legendX,curY-3,5,4,'F');
+    doc.setFontSize(7);setC(darkGray);
+    doc.text(p.charAt(0).toUpperCase()+p.slice(1),legendX+7,curY);
+    legendX+=30;
+  });
+  curY+=10;
+  
+  // Platform table
+  drawTable(
+    ['Platform','Mentions','Persentase'],
+    platEntries.map(([p,c])=>[p.charAt(0).toUpperCase()+p.slice(1),String(c),formatPct(c,total)+'%']),
+    [60,40,74]
+  );
+  drawPara(aiData.analisis_platform);
+
+  // =============================================
+  // PAGE 4: SENTIMENT ANALYSIS
+  // =============================================
+  drawPage('',4);
+  drawH1('Analisis Sentimen');
+  drawH3('Overview Sentimen');
+  
+  // Sentiment daily stacked bar
+  const sentDays=Object.keys(dailyMentions).sort();
+  if(sentDays.length>0){
+    const sentLabels=sentDays.map(d=>{const p=d.split('-');return p[2]+'/'+p[1];});
+    // Calculate daily sentiment
+    const dailySent={};
+    posts.forEach(p=>{
+      const day=p.timestamp?new Date(p.timestamp).toISOString().split('T')[0]:'unknown';
+      if(!dailySent[day])dailySent[day]={positive:0,neutral:0,negative:0};
+      dailySent[day][p.sentiment||'neutral']++;
+    });
+    const posArr=sentDays.map(d=>(dailySent[d]?.positive||0));
+    const neuArr=sentDays.map(d=>(dailySent[d]?.neutral||0));
+    const negArr=sentDays.map(d=>(dailySent[d]?.negative||0));
+    
+    drawStackedBar('Analisis Sentimen Harian',
+      `${stats.positive} positif, ${stats.negative} negatif, ${stats.neutral} netral`,
+      sentLabels,posArr,neuArr,negArr
+    );
+  }
+  
+  // Sentiment table
+  drawTable(
+    ['Sentimen','Jumlah','Persentase'],
+    [['Positif',String(stats.positive),posPct+'%'],['Netral',String(stats.neutral),neuPct+'%'],['Negatif',String(stats.negative),negPct+'%']],
+    [60,40,74]
+  );
+  drawPara(aiData.analisis_sentiment);
+  
+  // Sentiment by platform
+  curY+=3;
+  drawH3('Sentimen per Platform');
+  
+  const platSentEntries=Object.entries(platSentiment);
+  if(platSentEntries.length>0){
+    const pLabels=platSentEntries.map(([p])=>p.charAt(0).toUpperCase()+p.slice(1));
+    const pPos=platSentEntries.map(([,s])=>s.positive);
+    const pNeu=platSentEntries.map(([,s])=>s.neutral);
+    const pNeg=platSentEntries.map(([,s])=>s.negative);
+    drawStackedBar('Sentimen per Platform',
+      `${platSentEntries[0]?.[0]||''} paling positif`,
+      pLabels,pPos,pNeu,pNeg
+    );
+  }
+  
+  drawTable(
+    ['Platform','Positif','Netral','Negatif'],
+    platSentEntries.map(([p,s])=>[p.charAt(0).toUpperCase()+p.slice(1),String(s.positive),String(s.neutral),String(s.negative)]),
+    [50,30,30,64]
+  );
+
+  // =============================================
+  // PAGE 5: HASHTAG ANALYSIS
+  // =============================================
+  drawPage('',5);
+  drawH1('Analisis Trending Hashtag');
+  drawH3('Top 10 Hashtag');
+  
+  // Horizontal bar chart
+  const top10Tags=sortedKeywords.slice(0,10);
+  if(top10Tags.length>0){
+    drawHBarChart('Top 10 Trending Hashtags',
+      `${top10Tags[0][0]} dominan (${top10Tags[0][1]} mentions)`,
+      top10Tags.map(([tag,cnt])=>({label:tag,value:cnt})),
+      barSteel
+    );
+  }
+  
+  // Hashtag table
+  drawTable(
+    ['Rank','Hashtag','Mentions'],
+    top10Tags.map(([tag,cnt],i)=>[String(i+1),tag,String(cnt)]),
+    [20,80,74]
+  );
+  
+  if(aiData.analisis_hashtag){
+    drawH3('Analisis Kluster Hashtag');
+    drawPara(aiData.analisis_hashtag);
+  }
+
+  // =============================================
+  // PAGE 6: INFLUENCER & SOV
+  // =============================================
+  drawPage('',6);
+  drawH1('Analisis Influencer & Share of Voice');
+  drawH3('Top Influencer berdasarkan Share of Voice');
+  
+  // Influencer horizontal bars
+  const top5Inf=topInfluencers.slice(0,5);
+  if(top5Inf.length>0){
+    drawHBarChart('Top 5 Influencer Share of Voice',
+      'Berdasarkan reach/views',
+      top5Inf.map(([name,data])=>({label:name.substring(0,20),value:Math.round(data.views/totalReach*100)})),
+      barGreen
+    );
+  }
+  
+  // Influencer table
+  drawTable(
+    ['Influencer','Platform','Mentions','Reach','SOV'],
+    topInfluencers.slice(0,10).map(([name,data])=>[
+      name.substring(0,20),data.platform,String(data.posts),
+      formatNum(data.views),Math.round(data.views/totalReach*100)+'%'
+    ]),
+    [45,30,25,25,49]
+  );
+  
+  drawPara(aiData.analisis_influencer);
+
+  // =============================================
+  // PAGE 7: LOCATION & CONTENT
+  // =============================================
+  drawPage('',7);
+  if(sortedCities.length>0){
+    drawH2('Analisis Lokasi');
+    drawHBarChart('Mentions by City','Distribusi geografis mentions',
+      sortedCities.slice(0,8).map(([city,cnt])=>({label:city,value:cnt})),
+      barGreen
+    );
+    drawPara(aiData.analisis_lokasi);
+    curY+=3;drawSep();
+  }
+  
+  drawH2('Top Performing Content');
+  const topMentions=[...posts].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
+  topMentions.forEach((p,i)=>{
+    if(curY>ph-25)return;
+    doc.setFontSize(8);doc.setFont('helvetica','bold');setC(darkGray);
+    doc.text(`${i+1}. ${p.author||'Unknown'} [${p.platform}]`,m,curY);
+    doc.setFont('helvetica','normal');setC(midGray);
+    doc.text(`${formatNum(p.views||0)} views | ${(p.sentiment||'neutral')}`,pw-m,curY,{align:'right'});
+    curY+=4;
+    doc.setFontSize(7);setC(lightGray);
+    const preview=doc.splitTextToSize((p.content||'').substring(0,120),pw-2*m);
+    preview.slice(0,2).forEach(l=>{doc.text(l,m+5,curY);curY+=3.5;});
+    curY+=3;
+  });
+
+  // =============================================
+  // PAGE 8: SWOT ANALYSIS
+  // =============================================
+  drawPage('',8);
+  drawH1('SWOT Analysis');
+  curY+=3;
+  const swot=aiData.swot||{strengths:[],weaknesses:[],opportunities:[],threats:[]};
+  
+  // Strengths
+  drawH3('Strengths');
+  (swot.strengths||[]).forEach(s=>drawBullet(s,9));
+  curY+=3;
+  // Weaknesses
+  drawH3('Weaknesses');
+  (swot.weaknesses||[]).forEach(s=>drawBullet(s,9));
+  curY+=3;
+  // Opportunities
+  drawH3('Opportunities');
+  (swot.opportunities||[]).forEach(s=>drawBullet(s,9));
+  curY+=3;
+  // Threats
+  drawH3('Threats');
+  (swot.threats||[]).forEach(s=>drawBullet(s,9));
+
+  // =============================================
+  // PAGE 9: REKOMENDASI STRATEGIS
+  // =============================================
+  drawPage('',9);
+  drawH1('Rekomendasi Strategis');
+  curY+=3;
+  const recos=aiData.recommendations||[];
+  recos.forEach((r,i)=>{
+    doc.setFontSize(9);doc.setFont('helvetica','bold');setC(darkGray);
+    const numStr=`${i+1}. `;
+    doc.text(numStr,m,curY);
+    doc.setFont('helvetica','normal');
+    const lines=doc.splitTextToSize(r,pw-2*m-8);
+    lines.forEach((line,li)=>{
+      if(li===0){doc.text(line,m+8,curY);}
+      else{doc.text(line,m+8,curY);}
+      curY+=4.5;
+    });
+    curY+=3;
+  });
+  
+  // Key Findings
+  curY+=5;drawSep();
+  drawH2('Key Findings');
+  const findings=aiData.key_findings||[];
+  findings.forEach(f=>drawBullet(f,9));
+
+  // =============================================
+  // PAGE 10: THANK YOU
+  // =============================================
+  drawPage('',10);
+  // Center thank you text
+  doc.setFontSize(36);doc.setFont('helvetica','bold');setC(black);
+  doc.text('Terima Kasih',pw/2,ph/2-30,{align:'center'});
+  doc.setFontSize(12);doc.setFont('helvetica','normal');setC(midGray);
+  doc.text('Laporan ini di-generate oleh SocialPulse Pro',pw/2,ph/2-10,{align:'center'});
+  doc.setFontSize(10);
+  doc.text(new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),pw/2,ph/2+5,{align:'center'});
+  doc.setFontSize(9);setC(lightGray);
+  doc.text(`Keyword: ${keyword} | Total: ${stats.total} mentions | Reach: ${formatNum(stats.views)}`,pw/2,ph/2+20,{align:'center'});
+  
+  // ===== SAVE =====
+  doc.save(`SocialPulse_${keyword.replace(/\s+/g,'_')}_${dateFrom}_${dateTo}.pdf`);
+  toast('success','PDF Generated!','Comprehensive report with clean white theme downloaded');
+}
+
+// ===== INIT =====
+document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+setDatePreset(3);
+loadToken();
+loadORToken();
+loadProjects();
+</script>
+</body>
+</html>
