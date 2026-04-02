@@ -2,10 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const Database = require('better-sqlite3');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'socialpulse.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'slaytics.db');
+const JWT_SECRET = process.env.JWT_SECRET || 'slaytics-secret-key-change-in-production-2024';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -15,11 +18,20 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
     name TEXT NOT NULL,
     keywords TEXT NOT NULL,
     language TEXT DEFAULT 'id',
@@ -27,7 +39,8 @@ db.exec(`
     platforms TEXT DEFAULT '["tiktok","twitter","instagram","news"]',
     color TEXT DEFAULT '#6366f1',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
   CREATE TABLE IF NOT EXISTS scrape_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,20 +91,144 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_posts_session ON posts(session_id);
   CREATE INDEX IF NOT EXISTS idx_posts_external ON posts(external_id);
   CREATE INDEX IF NOT EXISTS idx_checkpoints_project ON scrape_checkpoints(project_id);
+  CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
 `);
 
+// ===== AUTH MIDDLEWARE =====
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+  
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Optional auth - doesn't require token but attaches user if present
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err) req.user = user;
+    });
+  }
+  next();
+};
+
+// ===== AUTH ROUTES =====
+app.post('/api/auth/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'Username, email, and password required' });
+  }
+  
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  
+  try {
+    const existing = db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(username, email);
+    if (existing) {
+      return res.status(400).json({ error: 'Username or email already exists' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)').run(username, email, hashedPassword);
+    
+    const token = jwt.sign({ id: result.lastInsertRowid, username, email }, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.json({ 
+      success: true, 
+      token,
+      user: { id: result.lastInsertRowid, username, email }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+  
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.json({ 
+      success: true, 
+      token,
+      user: { id: user.id, username: user.username, email: user.email }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  const user = db.prepare('SELECT id, username, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json(user);
+});
+
+app.put('/api/auth/password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password required' });
+  }
+  
+  try {
+    const user = db.prepare('SELECT password FROM users WHERE id = ?').get(req.user.id);
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    
+    const hashed = await bcrypt.hash(newPassword, 10);
+    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, req.user.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== SETTINGS =====
-app.get('/api/settings', (req, res) => {
+app.get('/api/settings', optionalAuth, (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const s = {}; rows.forEach(r => { try { s[r.key] = JSON.parse(r.value); } catch { s[r.key] = r.value; } });
   res.json(s);
 });
-app.get('/api/settings/:key', (req, res) => {
+app.get('/api/settings/:key', optionalAuth, (req, res) => {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key);
   if (!row) return res.json({ value: null });
   try { res.json({ value: JSON.parse(row.value) }); } catch { res.json({ value: row.value }); }
 });
-app.put('/api/settings/:key', (req, res) => {
+app.put('/api/settings/:key', optionalAuth, (req, res) => {
   const val = typeof req.body.value === 'string' ? req.body.value : JSON.stringify(req.body.value);
   db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP`).run(req.params.key, val);
   res.json({ success: true });
@@ -329,6 +466,49 @@ app.get('/api/checkpoints/:project_id/gap', (req, res) => {
   }
 });
 
+// ===== APIFY PROXY (for CORS-blocked actors like Facebook) =====
+app.post('/api/apify-proxy', async (req, res) => {
+  const { token, actor, input } = req.body;
+  
+  if (!token || !actor) {
+    return res.status(400).json({ error: 'Token and actor required' });
+  }
+  
+  try {
+    const fetch = (await import('node-fetch')).default;
+    
+    // Convert actor name format: "username/actor-name" or "username~actor-name"
+    // API needs format: "username~actor-name" for the endpoint
+    const actorId = actor.replace('/', '~');
+    
+    // Use the synchronous run endpoint that waits for results
+    const url = `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${token}`;
+    
+    console.log(`[Apify Proxy] Calling actor: ${actorId}`);
+    console.log(`[Apify Proxy] URL: ${url}`);
+    console.log(`[Apify Proxy] Input:`, JSON.stringify(input));
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Apify Proxy] Error (${response.status}): ${errorText}`);
+      return res.status(response.status).json({ error: errorText });
+    }
+    
+    const data = await response.json();
+    console.log(`[Apify Proxy] Success: ${Array.isArray(data) ? data.length : 'N/A'} items`);
+    res.json(data);
+  } catch (e) {
+    console.error('[Apify Proxy] Exception:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   const c = db.prepare('SELECT COUNT(*) as posts FROM posts').get();
   const p = db.prepare('SELECT COUNT(*) as projects FROM projects').get();
@@ -336,4 +516,4 @@ app.get('/api/health', (req, res) => {
   res.json({ status:'ok', posts:c.posts, projects:p.projects, checkpoints: cp.checkpoints });
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`SocialPulse Pro API v9 on :${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Slaytics API v1.0 on :${PORT}`));

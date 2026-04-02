@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SocialPulse Pro v12 — Brand Monitoring Platform</title>
+<title>Slaytics — Social Media Monitoring Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -317,12 +317,55 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <body>
 <div class="toast-c" id="toasts"></div>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:32px;width:100%;max-width:380px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:50px;height:50px;background:linear-gradient(135deg,var(--pink),var(--accent));border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;"><i class="fas fa-bolt"></i></div>
+      <h2 style="font-size:18px;margin-bottom:4px;">Welcome to Slaytics</h2>
+      <p style="font-size:11px;color:var(--text-3);">Social Media Monitoring Platform</p>
+    </div>
+    
+    <div id="login-form">
+      <div class="form-group">
+        <label>Username or Email</label>
+        <input type="text" id="login-username" placeholder="Enter username or email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password" onkeypress="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn btn-gradient btn-lg" style="width:100%;margin-top:8px;" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Login</button>
+      <p style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-3);">Don't have an account? <a href="#" onclick="showRegister()" style="color:var(--accent-2);">Register</a></p>
+    </div>
+    
+    <div id="register-form" style="display:none;">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="Choose a username"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="Enter your email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Choose a password (min 6 chars)"/>
+      </div>
+      <button class="btn btn-success btn-lg" style="width:100%;margin-top:8px;" onclick="doRegister()"><i class="fas fa-user-plus"></i> Create Account</button>
+      <p style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-3);">Already have an account? <a href="#" onclick="showLogin()" style="color:var(--accent-2);">Login</a></p>
+    </div>
+    
+    <div id="auth-error" style="display:none;margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:6px;font-size:11px;color:var(--red);text-align:center;"></div>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
       <div class="icon"><i class="fas fa-bolt"></i></div>
-      <div><h1>SocialPulse<sup style="font-size:8px;color:var(--pink)">v12</sup></h1><span>Brand Monitoring Platform</span></div>
+      <div><h1>Slaytics<sup style="font-size:8px;color:var(--pink)">v2</sup></h1><span>Social Media Monitoring</span></div>
     </div>
   </div>
   <div class="sidebar-section">
@@ -362,6 +405,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
       <button class="btn btn-gradient btn-sm" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> PDF</button>
       <button class="btn btn-success btn-sm" id="btn-scrape" onclick="openScrapeModal()"><i class="fas fa-sync-alt"></i> Update Data</button>
+      <div style="position:relative;margin-left:8px;" id="user-menu-container">
+        <button class="btn btn-ghost btn-sm" onclick="toggleUserMenu()" style="display:flex;align-items:center;gap:6px;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--pink),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;" id="user-avatar">U</div>
+          <span style="font-size:11px;color:var(--text);" id="user-name">User</span>
+          <i class="fas fa-chevron-down" style="font-size:9px;color:var(--text-3);"></i>
+        </button>
+        <div id="user-dropdown" style="display:none;position:absolute;right:0;top:100%;margin-top:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:100;">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:600;" id="dropdown-username">Username</div>
+            <div style="font-size:9px;color:var(--text-3);" id="dropdown-email">email@example.com</div>
+          </div>
+          <div class="sidebar-item" onclick="openModal('modal-settings');toggleUserMenu();" style="margin:4px;border-radius:4px;"><i class="fas fa-cog"></i> Settings</div>
+          <div class="sidebar-item" onclick="doLogout()" style="margin:4px;border-radius:4px;color:var(--red);"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -402,9 +460,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- Filled dynamically -->
     <div class="empty" id="no-project-msg">
       <i class="fas fa-folder-plus"></i>
-      <p style="font-size:14px;font-weight:600;margin-bottom:6px;">Buat Project Pertamamu</p>
-      <p>Seperti Brand24 — satu project bisa punya beberapa keyword.<br>Contoh: Project "Juragan 99" → keywords: juragan99, juragan_99, juragan 99</p>
-      <button class="btn btn-gradient btn-lg" style="margin-top:16px;" onclick="openModal('modal-new-project')"><i class="fas fa-plus"></i> Buat Project Baru</button>
+      <p style="font-size:14px;font-weight:600;margin-bottom:6px;">Create Your First Project</p>
+      <p>Monitor keywords across social media platforms.<br>Example: Project "My Brand" → keywords: mybrand, my_brand, my brand</p>
+      <button class="btn btn-gradient btn-lg" style="margin-top:16px;" onclick="openModal('modal-new-project')"><i class="fas fa-plus"></i> Create New Project</button>
     </div>
   </div>
 </div>
@@ -426,13 +484,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <h3><i class="fas fa-folder-plus" style="color:var(--green)"></i> Create New Project</h3>
     <div class="form-group">
       <label>Project Name</label>
-      <input type="text" id="np-name" placeholder="e.g., Juragan 99"/>
-      <div class="hint">Nama untuk identifikasi project</div>
+      <input type="text" id="np-name" placeholder="e.g., My Brand"/>
+      <div class="hint">Name to identify your project</div>
     </div>
     <div class="form-group">
-      <label>Keywords (pisahkan dengan koma)</label>
-      <input type="text" id="np-keywords" placeholder="e.g., juragan99, juragan_99, juragan 99"/>
-      <div class="hint">Semua keyword akan di-monitor sebagai satu project, seperti Brand24</div>
+      <label>Keywords (comma separated)</label>
+      <input type="text" id="np-keywords" placeholder="e.g., mybrand, my_brand, my brand"/>
+      <div class="hint">All keywords will be monitored as one project</div>
     </div>
     <div class="form-group">
       <label>Platforms</label>
@@ -450,8 +508,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="form-group"><label>Language</label><select id="np-lang"><option value="id">Indonesian</option><option value="en">English</option><option value="">All</option></select></div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-new-project')">Batal</button>
-      <button class="btn btn-success" onclick="createProject()"><i class="fas fa-check"></i> Buat Project</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-new-project')">Cancel</button>
+      <button class="btn btn-success" onclick="createProject()"><i class="fas fa-check"></i> Create Project</button>
     </div>
   </div>
 </div>
@@ -539,7 +597,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="modal">
     <h3><i class="fas fa-exchange-alt" style="color:var(--accent)"></i> Compare Projects</h3>
     <div class="form-group">
-      <label>Pilih 2+ Project untuk dibandingkan</label>
+      <label>Select 2+ Projects to compare</label>
       <div id="compare-project-list"></div>
     </div>
     <div class="form-group">
@@ -550,8 +608,61 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modal-compare')">Batal</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-compare')">Cancel</button>
       <button class="btn btn-primary" onclick="runComparison()"><i class="fas fa-chart-bar"></i> Compare</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Delete Project Confirmation -->
+<div class="modal-overlay" id="modal-delete-project">
+  <div class="modal" style="max-width:400px;">
+    <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Delete Project</h3>
+    <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Are you sure you want to delete <strong id="delete-project-name"></strong>? This will permanently delete all associated data including:</p>
+    <ul style="font-size:11px;color:var(--text-3);margin-left:16px;margin-bottom:16px;">
+      <li>All scraped posts and mentions</li>
+      <li>All scrape sessions and checkpoints</li>
+      <li>All analytics data</li>
+    </ul>
+    <p style="font-size:11px;color:var(--red);margin-bottom:16px;"><i class="fas fa-warning"></i> This action cannot be undone!</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-delete-project')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteProject()"><i class="fas fa-trash"></i> Delete Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Project -->
+<div class="modal-overlay" id="modal-edit-project">
+  <div class="modal">
+    <h3><i class="fas fa-edit" style="color:var(--accent)"></i> Edit Project</h3>
+    <div class="form-group">
+      <label>Project Name</label>
+      <input type="text" id="ep-name" placeholder="Project name"/>
+    </div>
+    <div class="form-group">
+      <label>Keywords (comma separated)</label>
+      <input type="text" id="ep-keywords" placeholder="keyword1, keyword2"/>
+    </div>
+    <div class="form-group">
+      <label>Platforms</label>
+      <div class="plat-toggles" id="ep-platforms">
+        <label class="plat-toggle"><input type="checkbox" value="tiktok"/><i class="fab fa-tiktok" style="color:var(--tiktok)"></i> TikTok</label>
+        <label class="plat-toggle"><input type="checkbox" value="twitter"/><i class="fab fa-twitter" style="color:var(--twitter)"></i> Twitter</label>
+        <label class="plat-toggle"><input type="checkbox" value="instagram"/><i class="fab fa-instagram" style="color:var(--instagram)"></i> Instagram</label>
+        <label class="plat-toggle"><input type="checkbox" value="facebook"/><i class="fab fa-facebook" style="color:var(--facebook)"></i> Facebook</label>
+        <label class="plat-toggle"><input type="checkbox" value="youtube"/><i class="fab fa-youtube" style="color:var(--youtube)"></i> YouTube</label>
+        <label class="plat-toggle"><input type="checkbox" value="news"/><i class="fas fa-newspaper" style="color:var(--news)"></i> News</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Color</label><input type="color" id="ep-color" value="#6366f1" style="height:38px;padding:2px;"/></div>
+      <div class="form-group"><label>Language</label><select id="ep-lang"><option value="id">Indonesian</option><option value="en">English</option><option value="">All</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="openDeleteProjectModal()" style="margin-right:auto;"><i class="fas fa-trash"></i> Delete</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-project')">Cancel</button>
+      <button class="btn btn-success" onclick="saveEditProject()"><i class="fas fa-save"></i> Save Changes</button>
     </div>
   </div>
 </div>
@@ -566,6 +677,166 @@ let posts = [];
 let charts = {};
 let dateFrom = '', dateTo = '';
 let lastStats = null;
+let currentUser = null;
+let authToken = null;
+
+// ===== AUTH FUNCTIONS =====
+function showLogin() {
+  document.getElementById('login-form').style.display = 'block';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function showRegister() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  if (!username || !password) {
+    showAuthError('Please enter username and password');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    
+    if (!res.ok) {
+      showAuthError(data.error || 'Login failed');
+      return;
+    }
+    
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('slaytics_token', authToken);
+    localStorage.setItem('slaytics_user', JSON.stringify(currentUser));
+    
+    onLoginSuccess();
+  } catch (e) {
+    showAuthError('Connection error. Please try again.');
+  }
+}
+
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  
+  if (!username || !email || !password) {
+    showAuthError('Please fill all fields');
+    return;
+  }
+  
+  if (password.length < 6) {
+    showAuthError('Password must be at least 6 characters');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    
+    if (!res.ok) {
+      showAuthError(data.error || 'Registration failed');
+      return;
+    }
+    
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('slaytics_token', authToken);
+    localStorage.setItem('slaytics_user', JSON.stringify(currentUser));
+    
+    onLoginSuccess();
+    toast('success', 'Welcome!', 'Account created successfully');
+  } catch (e) {
+    showAuthError('Connection error. Please try again.');
+  }
+}
+
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  updateUserUI();
+  loadProjects();
+}
+
+function updateUserUI() {
+  if (currentUser) {
+    document.getElementById('user-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+    document.getElementById('user-name').textContent = currentUser.username;
+    document.getElementById('dropdown-username').textContent = currentUser.username;
+    document.getElementById('dropdown-email').textContent = currentUser.email;
+  }
+}
+
+function toggleUserMenu() {
+  const dropdown = document.getElementById('user-dropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('user-menu-container');
+  if (container && !container.contains(e.target)) {
+    document.getElementById('user-dropdown').style.display = 'none';
+  }
+});
+
+function doLogout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('slaytics_token');
+  localStorage.removeItem('slaytics_user');
+  currentProject = null;
+  projects = [];
+  posts = [];
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  showLogin();
+  toast('info', 'Logged out', 'See you next time!');
+}
+
+function checkAuth() {
+  const savedToken = localStorage.getItem('slaytics_token');
+  const savedUser = localStorage.getItem('slaytics_user');
+  
+  if (savedToken && savedUser) {
+    authToken = savedToken;
+    try {
+      currentUser = JSON.parse(savedUser);
+      onLoginSuccess();
+      return true;
+    } catch (e) {
+      localStorage.removeItem('slaytics_token');
+      localStorage.removeItem('slaytics_user');
+    }
+  }
+  return false;
+}
+
+// Helper to add auth header to fetch requests
+function authHeaders() {
+  return authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+}
 
 // ===== CONSTANTS =====
 const CITIES=["Jakarta","Surabaya","Bandung","Medan","Semarang","Makassar","Palembang","Tangerang","Depok","Bekasi","Malang","Yogyakarta","Jogja","Denpasar","Bali","Surakarta","Solo","Balikpapan","Banjarmasin","Pontianak","Manado","Padang","Pekanbaru","Batam","Bogor","Cirebon","Tasikmalaya","Garut","Sukabumi","Karawang","Purwokerto","Tegal","Pekalongan","Magelang","Kediri","Jember","Blitar","Probolinggo","Pasuruan","Mojokerto","Madiun","Ngawi","Tuban","Lamongan","Gresik","Sidoarjo","Bangkalan","Pamekasan","Sumenep","Lumajang","Banyuwangi","Situbondo","Bondowoso","Tulungagung","Trenggalek","Pacitan","Ponorogo","Magetan","Nganjuk","Lombok","Mataram","Kupang","Ambon","Jayapura","Sorong","Ternate","Gorontalo","Palu","Kendari","Samarinda","Tarakan","Bontang","Palangkaraya","Jambi","Bengkulu","Lampung","Bandar Lampung","Aceh","Banda Aceh","Pati"];
@@ -621,9 +892,31 @@ function openDrilldown(title,icon,filterFn){
 function closeDrilldown(){document.getElementById('drilldown-overlay').classList.remove('active');}
 
 // ===== OPENROUTER AI =====
-async function saveORToken(){const v=document.getElementById('s-or-token').value.trim();if(!v){toast('error','Error','Masukkan OpenRouter token');return;}try{await fetch(`${API}/settings/openrouter_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:v})});document.getElementById('or-token-ok').style.display='block';toast('success','Saved!','OpenRouter token tersimpan');}catch(e){localStorage.setItem('or_token',v);toast('info','Saved locally','');}}
-async function getORToken(){const t=document.getElementById('s-or-token').value.trim();if(t)return t;try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){document.getElementById('s-or-token').value=d.value;return d.value;}}catch{}return localStorage.getItem('or_token')||'';}
-async function loadORToken(){try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){document.getElementById('s-or-token').value=d.value;document.getElementById('or-token-ok').style.display='block';}}catch{}}
+async function saveORToken(){
+  const el=document.getElementById('s-or-token');if(!el)return;
+  const v=el.value.trim();if(!v){toast('error','Error','Masukkan OpenRouter token');return;}
+  try{
+    await fetch(`${API}/settings/openrouter_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:v})});
+    const okEl=document.getElementById('or-token-ok');if(okEl)okEl.style.display='block';
+    toast('success','Saved!','OpenRouter token tersimpan');
+  }catch(e){localStorage.setItem('or_token',v);toast('info','Saved locally','');}
+}
+async function getORToken(){
+  const el=document.getElementById('s-or-token');
+  const t=el?el.value.trim():'';
+  if(t)return t;
+  try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){if(el)el.value=d.value;return d.value;}}catch{}
+  return localStorage.getItem('or_token')||'';
+}
+async function loadORToken(){
+  try{
+    const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();
+    if(d.value){
+      const el=document.getElementById('s-or-token');if(el)el.value=d.value;
+      const okEl=document.getElementById('or-token-ok');if(okEl)okEl.style.display='block';
+    }
+  }catch{}
+}
 
 async function callOpenRouter(systemPrompt, userPrompt){
   const token=await getORToken();
@@ -729,13 +1022,26 @@ Jangan tambahkan markdown backticks atau apapun di luar JSON.`;
 
 // ===== TOKEN =====
 async function loadToken(){
-  try{const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();if(d.value){document.getElementById('s-token').value=d.value;document.getElementById('token-ok').style.display='block';return d.value;}}catch(e){}
-  const l=localStorage.getItem('apify_token');if(l){document.getElementById('s-token').value=l;return l;}return null;
+  try{
+    const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();
+    if(d.value){
+      const sToken=document.getElementById('s-token');if(sToken)sToken.value=d.value;
+      const tokenOk=document.getElementById('token-ok');if(tokenOk)tokenOk.style.display='block';
+      return d.value;
+    }
+  }catch(e){}
+  const l=localStorage.getItem('apify_token');
+  if(l){const sToken=document.getElementById('s-token');if(sToken)sToken.value=l;return l;}
+  return null;
 }
 async function saveToken(){
-  const t=document.getElementById('s-token').value.trim();if(!t){toast('error','Error','Token kosong');return;}
-  try{await fetch(`${API}/settings/apify_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:t})});document.getElementById('token-ok').style.display='block';toast('success','Saved!','Token disimpan di database');}
-  catch(e){localStorage.setItem('apify_token',t);toast('info','Saved locally','Backend unavailable');}
+  const sToken=document.getElementById('s-token');if(!sToken)return;
+  const t=sToken.value.trim();if(!t){toast('error','Error','Token kosong');return;}
+  try{
+    await fetch(`${API}/settings/apify_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:t})});
+    const tokenOk=document.getElementById('token-ok');if(tokenOk)tokenOk.style.display='block';
+    toast('success','Saved!','Token disimpan di database');
+  }catch(e){localStorage.setItem('apify_token',t);toast('info','Saved locally','Backend unavailable');}
 }
 async function getToken(){const t=document.getElementById('s-token').value.trim();if(t)return t;try{const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();if(d.value)return d.value;}catch(e){}return localStorage.getItem('apify_token')||'';}
 
@@ -744,34 +1050,129 @@ async function loadProjects(){
   try{const r=await fetch(`${API}/projects`);projects=await r.json();}catch(e){projects=[];}
   renderSidebar();
   if(projects.length>0&&!currentProject)selectProject(projects[0]);
-  else if(projects.length===0)document.getElementById('no-project-msg').style.display='block';
+  else if(projects.length===0){
+    const el=document.getElementById('no-project-msg');
+    if(el)el.style.display='block';
+  }
 }
 
 function renderSidebar(){
   const el=document.getElementById('sidebar-projects');
   if(projects.length===0){el.innerHTML='<div class="sidebar-item" onclick="openModal(\'modal-new-project\')" style="color:var(--text-3);font-size:11px;"><i class="fas fa-plus"></i> Create first project</div>';return;}
   el.innerHTML=projects.map(p=>`
-    <div class="sidebar-item project-item ${currentProject?.id===p.id?'active':''}" onclick="selectProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-      <div class="project-dot" style="background:${p.color}"></div>
-      <span style="flex:1;font-size:11px;">${p.name}</span>
-      <span class="project-count">${fmt(p.total_mentions||0)}</span>
+    <div class="sidebar-item project-item ${currentProject?.id===p.id?'active':''}" style="position:relative;">
+      <div onclick="selectProject(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="display:flex;align-items:center;gap:9px;flex:1;">
+        <div class="project-dot" style="background:${p.color}"></div>
+        <span style="flex:1;font-size:11px;">${p.name}</span>
+        <span class="project-count">${fmt(p.total_mentions||0)}</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditProjectModal(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="padding:4px 6px;opacity:0.5;margin-left:4px;" title="Edit Project"><i class="fas fa-ellipsis-v" style="font-size:10px;"></i></button>
     </div>`).join('');
 }
 
 async function createProject(){
   const name=document.getElementById('np-name').value.trim();
   const kw=document.getElementById('np-keywords').value.trim();
-  if(!name||!kw){toast('error','Error','Isi nama dan keywords');return;}
+  if(!name||!kw){toast('error','Error','Fill in name and keywords');return;}
   const platforms=[...document.querySelectorAll('#np-platforms input:checked')].map(i=>i.value);
   const color=document.getElementById('np-color').value;
   const lang=document.getElementById('np-lang').value;
   try{
     const r=await fetch(`${API}/projects`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,keywords:kw,platforms,color,language:lang})});
     const p=await r.json();
-    toast('success','Project Created!',`"${name}" dengan ${kw.split(',').length} keywords`);
+    toast('success','Project Created!',`"${name}" with ${kw.split(',').length} keywords`);
     closeModal('modal-new-project');
     await loadProjects();
     selectProject(projects.find(pr=>pr.id===p.id)||projects[0]);
+  }catch(e){toast('error','Error',e.message);}
+}
+
+let editingProject = null;
+
+function openEditProjectModal(p){
+  if(typeof p==='string') p=JSON.parse(p);
+  editingProject = p;
+  document.getElementById('ep-name').value = p.name;
+  document.getElementById('ep-keywords').value = Array.isArray(p.keywords) ? p.keywords.join(', ') : p.keywords;
+  document.getElementById('ep-color').value = p.color || '#6366f1';
+  document.getElementById('ep-lang').value = p.language || 'id';
+  
+  // Set platform checkboxes
+  const platforms = Array.isArray(p.platforms) ? p.platforms : JSON.parse(p.platforms || '[]');
+  document.querySelectorAll('#ep-platforms input').forEach(cb => {
+    cb.checked = platforms.includes(cb.value);
+    cb.closest('.plat-toggle').classList.toggle('active', cb.checked);
+  });
+  
+  openModal('modal-edit-project');
+}
+
+async function saveEditProject(){
+  if(!editingProject) return;
+  const name = document.getElementById('ep-name').value.trim();
+  const keywords = document.getElementById('ep-keywords').value.trim();
+  const platforms = [...document.querySelectorAll('#ep-platforms input:checked')].map(i=>i.value);
+  const color = document.getElementById('ep-color').value;
+  const language = document.getElementById('ep-lang').value;
+  
+  if(!name || !keywords){toast('error','Error','Fill in name and keywords');return;}
+  
+  try{
+    await fetch(`${API}/projects/${editingProject.id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, keywords, platforms, color, language})
+    });
+    toast('success','Project Updated!',`"${name}" has been updated`);
+    closeModal('modal-edit-project');
+    await loadProjects();
+    if(currentProject?.id === editingProject.id){
+      selectProject(projects.find(pr=>pr.id===editingProject.id));
+    }
+    editingProject = null;
+  }catch(e){toast('error','Error',e.message);}
+}
+
+function openDeleteProjectModal(){
+  if(!editingProject) return;
+  document.getElementById('delete-project-name').textContent = editingProject.name;
+  closeModal('modal-edit-project');
+  openModal('modal-delete-project');
+}
+
+async function confirmDeleteProject(){
+  if(!editingProject) return;
+  try{
+    await fetch(`${API}/projects/${editingProject.id}`,{method:'DELETE'});
+    toast('success','Project Deleted!',`"${editingProject.name}" and all data removed`);
+    closeModal('modal-delete-project');
+    
+    // If deleted project was current, clear selection
+    if(currentProject?.id === editingProject.id){
+      currentProject = null;
+      posts = [];
+      lastStats = null;
+    }
+    
+    editingProject = null;
+    await loadProjects();
+    
+    if(projects.length > 0 && !currentProject){
+      selectProject(projects[0]);
+    } else if(projects.length === 0){
+      // Show empty state - rebuild the no-project-msg if it was removed
+      const contentArea = document.getElementById('content-area');
+      if(contentArea) {
+        contentArea.innerHTML = `
+          <div class="empty" id="no-project-msg" style="display:block;">
+            <i class="fas fa-folder-plus"></i>
+            <p style="font-size:14px;font-weight:600;margin-bottom:6px;">Create Your First Project</p>
+            <p>Monitor keywords across social media platforms.<br>Example: Project "My Brand" → keywords: mybrand, my_brand, my brand</p>
+            <button class="btn btn-gradient btn-lg" style="margin-top:16px;" onclick="openModal('modal-new-project')"><i class="fas fa-plus"></i> Create New Project</button>
+          </div>
+        `;
+      }
+    }
   }catch(e){toast('error','Error',e.message);}
 }
 
@@ -927,7 +1328,7 @@ function renderCharts(stats){
       const kws=Array.isArray(currentProject.keywords)?currentProject.keywords:[currentProject.keywords];
       const kwPat=kws.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
       const kwRe=new RegExp(`(${kwPat})`,'gi');
-      feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Scrape Now" to start!</p></div>';
+      feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):(p.timestamp?new Date(p.timestamp).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?'<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• '+postDate+'</span>':''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Update Data" to start!</p></div>';
     }
   }
 
@@ -1286,8 +1687,49 @@ async function startScraping(){
 // Date filtering is ONLY for dashboard display, not for data collection
 
 async function fetchTikTok(kw,max,from,to){
-  const url=`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(kw)}&count=${max}&cursor=0&web=1&hd=1`;
-  console.log('TikTok fetch:', url);
+  // Try Apify first (more data, requires token), fallback to tikwm
+  const token = await getToken();
+  
+  if(token) {
+    try {
+      console.log('TikTok: Using Apify actor');
+      const d = await fetchApify(token, 'clockworks~tiktok-scraper', {
+        searchQueries: [kw],
+        resultsPerPage: max,
+        maxResults: max,
+        shouldDownloadVideos: false,
+        shouldDownloadCovers: false
+      });
+      
+      if(d && d.length > 0) {
+        return d.map(v => {
+          let ts = new Date();
+          try { if(v.createTime) ts = new Date(v.createTime * 1000); else if(v.createdAt) ts = new Date(v.createdAt); } catch{}
+          return {
+            id: v.id || v.videoId || Math.random().toString(36),
+            platform: 'tiktok',
+            author: v.authorMeta?.name || v.author?.nickname || v.authorName || 'Unknown',
+            handle: '@' + (v.authorMeta?.id || v.author?.uniqueId || v.authorId || 'user'),
+            avatar: v.authorMeta?.avatar || v.author?.avatarThumb || '',
+            content: v.text || v.desc || v.title || '',
+            views: v.playCount || v.plays || v.videoMeta?.playCount || 0,
+            likes: v.diggCount || v.likes || v.videoMeta?.diggCount || 0,
+            shares: v.shareCount || v.shares || v.videoMeta?.shareCount || 0,
+            comments: v.commentCount || v.comments || v.videoMeta?.commentCount || 0,
+            timestamp: ts,
+            url: v.webVideoUrl || v.videoUrl || `https://tiktok.com/@${v.authorMeta?.id || 'user'}/video/${v.id}`,
+            source: 'TikTok'
+          };
+        });
+      }
+    } catch(e) {
+      console.log('Apify TikTok failed, falling back to tikwm:', e.message);
+    }
+  }
+  
+  // Fallback to tikwm (free but limited to 30)
+  const url=`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(kw)}&count=${Math.min(max, 30)}&cursor=0&web=1&hd=1`;
+  console.log('TikTok fetch (tikwm fallback):', url);
   const r=await fetch(url);
   const d=await r.json();
   console.log('TikTok response:', d);
@@ -1296,11 +1738,9 @@ async function fetchTikTok(kw,max,from,to){
     throw new Error(d.msg||'No data');
   }
   
-  // NO DATE FILTERING - collect all data, database will deduplicate by external_id
   const results = d.data.videos.map(v=>{
     let av=v.author?.avatar||'';
     if(av&&!av.startsWith('http'))av='https://www.tikwm.com'+av;
-    // create_time is Unix timestamp in seconds
     const ts=v.create_time?new Date(v.create_time*1000):new Date();
     return{
       id:v.video_id||v.id,
@@ -1319,7 +1759,7 @@ async function fetchTikTok(kw,max,from,to){
     };
   });
   
-  console.log(`TikTok: ${results.length} posts collected (no date filter - DB will dedupe)`);
+  console.log(`TikTok: ${results.length} posts collected`);
   return results;
 }
 
@@ -1345,12 +1785,69 @@ async function fetchInstagram(token,kw,max,from,to){
   });
 }
 
-// Facebook - no date filter in scraping
+// Facebook - use sasky/facebook-keyword-videos-urls-scraper via backend proxy
 async function fetchFacebook(token,kw,max,from,to){
-  const d=await fetchApify(token,'easyapi~facebook-posts-search-scraper',{query:kw,maxResults:max});
-  return d.filter(p=>!p.error).map(p=>{
-    let ts=new Date();try{if(p.timestamp)ts=new Date(p.timestamp);else if(p.time)ts=new Date(p.time);else if(p.date)ts=new Date(p.date);}catch{}
-    return{id:p.post_id||p.id||Math.random().toString(36),platform:'facebook',author:p.author_name||p.name||'Unknown',handle:p.author_url||'',avatar:p.author_image||null,content:p.text||p.message||'',views:p.views||0,likes:p.likes||p.reactions||0,shares:p.shares||0,comments:p.comments||0,timestamp:ts,url:p.url||p.post_url||'',source:p.page_name||'Facebook'};
+  console.log('Facebook: Using backend proxy for sasky/facebook-keyword-videos-urls-scraper');
+  
+  // Build input matching Apify Console format exactly
+  // NOTE: limit must be STRING not number!
+  const input = {
+    keywords: [kw],
+    limit: String(max || 30),  // Must be string!
+    date: "last-6-months"      // Default date filter
+  };
+  
+  // Custom date range if provided
+  if(from && to) {
+    input.from = from;  // YYYY-MM-DD
+    input.to = to;      // YYYY-MM-DD
+    delete input.date;  // Remove preset date when using custom range
+  }
+  
+  console.log('Facebook input:', JSON.stringify(input));
+  
+  // Use backend proxy to avoid CORS
+  const response = await fetch(`${API}/apify-proxy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: token,
+      actor: 'sasky/facebook-keyword-videos-urls-scraper',
+      input: input
+    })
+  });
+  
+  if(!response.ok) {
+    const errText = await response.text();
+    console.error('Facebook proxy error:', errText);
+    throw new Error(errText);
+  }
+  
+  const d = await response.json();
+  console.log('Facebook results:', d.length);
+  
+  return d.filter(p => !p.error).map(p => {
+    let ts = new Date();
+    try {
+      if(p.date) ts = new Date(p.date);
+      else if(p.timestamp) ts = new Date(p.timestamp);
+    } catch{}
+    
+    return {
+      id: p.video_url || p.url || Math.random().toString(36),
+      platform: 'facebook',
+      author: p.author_name || 'Unknown',
+      handle: p.author_link || '',
+      avatar: null,
+      content: p.keyword || kw,  // This actor returns keyword, not full content
+      views: 0,
+      likes: 0,
+      shares: 0,
+      comments: 0,
+      timestamp: ts,
+      url: p.video_url || '',
+      source: p.author_name || 'Facebook'
+    };
   });
 }
 
@@ -1513,7 +2010,7 @@ async function generatePDF(){
     // White background (default, no need to fill)
     // Page footer
     doc.setFontSize(7);setC(lightGray);
-    doc.text(`SocialPulse Pro | ${keyword} | ${dateFrom} - ${dateTo} | Halaman ${pn}/${TP}`,pw/2,ph-10,{align:'center'});
+    doc.text(`Slaytics | ${keyword} | ${dateFrom} - ${dateTo} | Halaman ${pn}/${TP}`,pw/2,ph-10,{align:'center'});
     curY=22;
   };
   
@@ -1768,7 +2265,7 @@ async function generatePDF(){
   );
   // Footer
   doc.setFontSize(7);setC(lightGray);
-  doc.text(`SocialPulse Pro | ${keyword} | ${dateFrom} - ${dateTo} | Halaman 1/${TP}`,pw/2,ph-10,{align:'center'});
+  doc.text(`Slaytics | ${keyword} | ${dateFrom} - ${dateTo} | Halaman 1/${TP}`,pw/2,ph-10,{align:'center'});
 
   // =============================================
   // PAGE 2: TREN MENTIONS & REACH
@@ -2054,23 +2551,29 @@ async function generatePDF(){
   doc.setFontSize(36);doc.setFont('helvetica','bold');setC(black);
   doc.text('Terima Kasih',pw/2,ph/2-30,{align:'center'});
   doc.setFontSize(12);doc.setFont('helvetica','normal');setC(midGray);
-  doc.text('Laporan ini di-generate oleh SocialPulse Pro',pw/2,ph/2-10,{align:'center'});
+  doc.text('Laporan ini di-generate oleh Slaytics',pw/2,ph/2-10,{align:'center'});
   doc.setFontSize(10);
   doc.text(new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),pw/2,ph/2+5,{align:'center'});
   doc.setFontSize(9);setC(lightGray);
   doc.text(`Keyword: ${keyword} | Total: ${stats.total} mentions | Reach: ${formatNum(stats.views)}`,pw/2,ph/2+20,{align:'center'});
   
   // ===== SAVE =====
-  doc.save(`SocialPulse_${keyword.replace(/\s+/g,'_')}_${dateFrom}_${dateTo}.pdf`);
+  doc.save(`Slaytics_${keyword.replace(/\s+/g,'_')}_${dateFrom}_${dateTo}.pdf`);
   toast('success','PDF Generated!','Comprehensive report with clean white theme downloaded');
 }
 
 // ===== INIT =====
 document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 setDatePreset(3);
-loadToken();
-loadORToken();
-loadProjects();
+
+// Check if user is already logged in
+if (!checkAuth()) {
+  // Show login screen
+  document.getElementById('login-screen').style.display = 'flex';
+} else {
+  loadToken();
+  loadORToken();
+}
 </script>
 </body>
 </html>
