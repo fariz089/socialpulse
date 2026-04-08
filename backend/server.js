@@ -187,6 +187,35 @@ app.post('/api/settings', async (req, res) => {
   }
 });
 
+// PUT /api/settings/:key - update specific setting
+app.put('/api/settings/:key', async (req, res) => {
+  const { value } = req.body;
+  try {
+    await db.collection('settings').updateOne(
+      { key: req.params.key },
+      { $set: { key: req.params.key, value, updated_at: new Date() } },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Helper function to sanitize keywords
+function sanitizeKeywords(input) {
+  if (!input) return '';
+  if (Array.isArray(input)) {
+    return input.map(k => k.toString().replace(/[""''`]/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim()).filter(k => k.length > 0);
+  }
+  return input.toString()
+    .replace(/[""''`]/g, '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => k.length > 0);
+}
+
 // ===== PROJECTS =====
 app.get('/api/projects', optionalAuth, async (req, res) => {
   try {
@@ -211,11 +240,15 @@ app.post('/api/projects', optionalAuth, async (req, res) => {
   const { name, keywords, platforms, language, color, excluded_keywords } = req.body;
   if (!name || !keywords) return res.status(400).json({ error: 'Name and keywords required' });
   
+  // Sanitize keywords before saving
+  const cleanKeywords = sanitizeKeywords(keywords);
+  console.log('[Project Create] Keywords sanitized:', { original: keywords, cleaned: cleanKeywords });
+  
   try {
     const result = await db.collection('projects').insertOne({
       user_id: req.user?.id || null,
       name,
-      keywords: JSON.stringify(keywords),
+      keywords: JSON.stringify(cleanKeywords),
       language: language || 'id',
       excluded_keywords: JSON.stringify(excluded_keywords || []),
       platforms: JSON.stringify(platforms || ['tiktok', 'twitter', 'instagram', 'news']),
@@ -235,7 +268,12 @@ app.put('/api/projects/:id', async (req, res) => {
   try {
     const updateData = { updated_at: new Date() };
     if (name) updateData.name = name;
-    if (keywords) updateData.keywords = JSON.stringify(keywords);
+    if (keywords) {
+      // Sanitize keywords before saving
+      const cleanKeywords = sanitizeKeywords(keywords);
+      console.log('[Project Update] Keywords sanitized:', { original: keywords, cleaned: cleanKeywords });
+      updateData.keywords = JSON.stringify(cleanKeywords);
+    }
     if (platforms) updateData.platforms = JSON.stringify(platforms);
     if (language !== undefined) updateData.language = language;
     if (color) updateData.color = color;
@@ -341,6 +379,70 @@ app.post('/api/posts', async (req, res) => {
     
     res.json({ inserted });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Bulk insert posts (from frontend scraping)
+app.post('/api/posts/bulk', async (req, res) => {
+  const { session_id, project_id, posts } = req.body;
+  
+  if (!posts || !Array.isArray(posts)) {
+    return res.status(400).json({ error: 'Posts array required' });
+  }
+  
+  try {
+    let inserted = 0;
+    for (const p of posts) {
+      // Check for duplicate
+      if (p.external_id) {
+        const existing = await db.collection('posts').findOne({
+          project_id: project_id,
+          external_id: p.external_id
+        });
+        if (existing) continue;
+      }
+      
+      await db.collection('posts').insertOne({
+        project_id: project_id,
+        external_id: p.external_id,
+        platform: p.platform,
+        keyword_matched: p.keyword_matched,
+        author: p.author,
+        handle: p.handle,
+        avatar: p.avatar,
+        content: p.content,
+        views: p.views || 0,
+        likes: p.likes || 0,
+        shares: p.shares || 0,
+        comments: p.comments || 0,
+        sentiment: p.sentiment || 'neutral',
+        cities: typeof p.cities === 'string' ? p.cities : JSON.stringify(p.cities || []),
+        hashtags: typeof p.hashtags === 'string' ? p.hashtags : JSON.stringify(p.hashtags || []),
+        source_name: p.source_name,
+        url: p.url,
+        post_date: p.post_date ? new Date(p.post_date) : null,
+        created_at: new Date()
+      });
+      inserted++;
+    }
+    
+    // Update session count
+    if (session_id) {
+      try {
+        await db.collection('scrape_sessions').updateOne(
+          { _id: new ObjectId(session_id) },
+          { $inc: { total_results: inserted } }
+        );
+      } catch (e) {
+        console.log('Session update error:', e.message);
+      }
+    }
+    
+    console.log(`Bulk insert: ${inserted}/${posts.length} posts saved for project ${project_id}`);
+    res.json({ inserted, total: posts.length });
+  } catch (e) {
+    console.error('Bulk insert error:', e);
     res.status(500).json({ error: e.message });
   }
 });

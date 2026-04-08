@@ -903,7 +903,7 @@ function navTo(view){
 function openDrilldown(title,icon,filterFn){
   const filtered=posts.filter(filterFn);
   document.getElementById('drilldown-title').innerHTML=`<i class="fas fa-${icon}"></i> ${title} <span class="drilldown-count">${filtered.length} posts</span>`;
-  const kws=Array.isArray(currentProject?.keywords)?currentProject.keywords:(typeof currentProject?.keywords==='string'?currentProject.keywords.split(',').map(k=>k.trim()).filter(k=>k):[]);
+  const kws=parseKeywords(currentProject?.keywords);
   document.getElementById('drilldown-content').innerHTML=filtered.length?filtered.map(p=>{
     const c=P_CFG[p.platform]||P_CFG.tiktok;
     const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -1092,10 +1092,59 @@ function renderSidebar(){
     </div>`).join('');
 }
 
+// Sanitize keywords: remove quotes, extra spaces, hidden characters
+function sanitizeKeywords(input) {
+  if (!input) return '';
+  return input
+    .replace(/[""''`]/g, '')           // Remove all types of quotes
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width characters
+    .replace(/\s+/g, ' ')              // Normalize multiple spaces to single
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => k.length > 0)
+    .join(', ');
+}
+
+// Parse keywords from project - handles JSON string, array, or comma-separated string
+function parseKeywords(keywords) {
+  if (!keywords) return [];
+  
+  // If already an array, clean each item
+  if (Array.isArray(keywords)) {
+    return keywords.map(k => String(k).trim()).filter(k => k.length > 0);
+  }
+  
+  // If string, try to parse as JSON first
+  if (typeof keywords === 'string') {
+    // Try JSON parse first (for '["kw1","kw2"]' format)
+    try {
+      const parsed = JSON.parse(keywords);
+      if (Array.isArray(parsed)) {
+        return parsed.map(k => String(k).trim()).filter(k => k.length > 0);
+      }
+    } catch (e) {
+      // Not JSON, treat as comma-separated
+    }
+    
+    // Fallback: comma-separated string
+    return keywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+  }
+  
+  return [];
+}
+
 async function createProject(){
   const name=document.getElementById('np-name').value.trim();
-  const kw=document.getElementById('np-keywords').value.trim();
+  const rawKw=document.getElementById('np-keywords').value.trim();
+  const kw=sanitizeKeywords(rawKw);
   if(!name||!kw){toast('error','Error','Fill in name and keywords');return;}
+  
+  // Show warning if keywords were sanitized
+  if(rawKw !== kw) {
+    console.log('Keywords sanitized:', { original: rawKw, cleaned: kw });
+    toast('info', 'Keywords Cleaned', 'Removed quotes and extra characters');
+  }
+  
   const platforms=[...document.querySelectorAll('#np-platforms input:checked')].map(i=>i.value);
   const color=document.getElementById('np-color').value;
   const lang=document.getElementById('np-lang').value;
@@ -1115,7 +1164,7 @@ function openEditProjectModal(p){
   if(typeof p==='string') p=JSON.parse(p);
   editingProject = p;
   document.getElementById('ep-name').value = p.name;
-  document.getElementById('ep-keywords').value = Array.isArray(p.keywords) ? p.keywords.join(', ') : p.keywords;
+  document.getElementById('ep-keywords').value = parseKeywords(p.keywords).join(', ');
   document.getElementById('ep-color').value = p.color || '#6366f1';
   document.getElementById('ep-lang').value = p.language || 'id';
   
@@ -1132,12 +1181,19 @@ function openEditProjectModal(p){
 async function saveEditProject(){
   if(!editingProject) return;
   const name = document.getElementById('ep-name').value.trim();
-  const keywords = document.getElementById('ep-keywords').value.trim();
+  const rawKeywords = document.getElementById('ep-keywords').value.trim();
+  const keywords = sanitizeKeywords(rawKeywords);
   const platforms = [...document.querySelectorAll('#ep-platforms input:checked')].map(i=>i.value);
   const color = document.getElementById('ep-color').value;
   const language = document.getElementById('ep-lang').value;
   
   if(!name || !keywords){toast('error','Error','Fill in name and keywords');return;}
+  
+  // Show warning if keywords were sanitized
+  if(rawKeywords !== keywords) {
+    console.log('Keywords sanitized:', { original: rawKeywords, cleaned: keywords });
+    toast('info', 'Keywords Cleaned', 'Removed quotes and extra characters');
+  }
   
   try{
     await fetch(`${API}/projects/${editingProject.id}`,{
@@ -1208,7 +1264,7 @@ function selectProject(p){
   const noMsg = document.getElementById('no-project-msg');
   if(noMsg) noMsg.style.display='none';
   document.getElementById('topbar-title').textContent=p.name;
-  const kws=Array.isArray(p.keywords)?p.keywords:(typeof p.keywords==='string'?p.keywords.split(',').map(k=>k.trim()).filter(k=>k):[]);
+  const kws=parseKeywords(p.keywords);
   document.getElementById('topbar-keywords').innerHTML=kws.map(k=>`<span class="kw-tag">${k}</span>`).join('');
   renderSidebar();
   loadProjectData();
@@ -1365,7 +1421,7 @@ function renderCharts(stats){
   if(currentView==='mentions'){
     const feedEl=document.getElementById('r-feed');
     if(feedEl){
-      const kws=Array.isArray(currentProject.keywords)?currentProject.keywords:(typeof currentProject.keywords==='string'?currentProject.keywords.split(',').map(k=>k.trim()).filter(k=>k):[]);
+      const kws=parseKeywords(currentProject.keywords);
       const kwPat=kws.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
       const kwRe=new RegExp(`(${kwPat})`,'gi');
       feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):(p.timestamp?new Date(p.timestamp).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?'<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• '+postDate+'</span>':''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Update Data" to start!</p></div>';
@@ -1642,7 +1698,8 @@ async function startScraping(){
     return;
   }
   
-  const kws=Array.isArray(currentProject.keywords)?currentProject.keywords:(typeof currentProject.keywords==='string'?currentProject.keywords.split(',').map(k=>k.trim()).filter(k=>k):[]);
+  const kws=parseKeywords(currentProject.keywords);
+  console.log('Scraping keywords:', kws); // Debug log
   const plats=Array.isArray(currentProject.platforms)?currentProject.platforms:JSON.parse(currentProject.platforms||'[]');
 
   const needsApify=plats.some(p=>p!=='tiktok');
