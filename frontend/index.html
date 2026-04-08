@@ -1862,23 +1862,97 @@ async function fetchTikTok(kw,max,from,to){
 
 async function fetchApify(token,actor,input){const r=await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${token}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});if(!r.ok)throw new Error(await r.text());return await r.json();}
 
-// Twitter - no date filter in scraping, collect all
+// Helper: fetch via backend proxy to avoid CORS
+async function fetchApifyProxy(token, actor, input) {
+  console.log(`Using backend proxy for ${actor}`);
+  console.log('Input:', JSON.stringify(input));
+  
+  const response = await fetch(`${API}/apify-proxy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, actor, input })
+  });
+  
+  if(!response.ok) {
+    const errText = await response.text();
+    console.error(`${actor} proxy error:`, errText);
+    throw new Error(errText);
+  }
+  
+  const d = await response.json();
+  console.log(`${actor} results:`, Array.isArray(d) ? d.length : 'N/A');
+  return d;
+}
+
+// Twitter - use backend proxy to avoid CORS
 async function fetchTwitter(token,kw,max,from,to){
-  const d=await fetchApify(token,'kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest',{searchTerms:[kw],maxTweets:max,maxItems:max,sort:'Latest'});
-  return d.filter(t=>{const x=t.text||t.full_text||'';return!x.includes('KaitoEasyAPI')&&t.id!==-1&&t.id!=='-1';}).map(t=>{
-    let h='user';if(t.url)h=t.url.split('/')[3]||'user';
-    let ts=new Date();try{if(t.createdAt)ts=new Date(t.createdAt);}catch{}
-    return{id:t.id||Math.random().toString(36),platform:'twitter',author:t['author.name']||t.author?.name||h,handle:'@'+h,avatar:t['author.profilePicture']||t.author?.profilePicture,content:t.text||t.full_text||'',views:t.viewCount||0,likes:t.likeCount||0,shares:t.retweetCount||0,comments:t.replyCount||0,timestamp:ts,url:t.url||'',source:'Twitter'};
+  const input = {
+    searchTerms: [kw],
+    maxTweets: max,
+    maxItems: max,
+    sort: 'Latest'
+  };
+  
+  const d = await fetchApifyProxy(token, 'kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest', input);
+  
+  return d.filter(t=>{
+    const x = t.text || t.full_text || '';
+    return !x.includes('KaitoEasyAPI') && t.id !== -1 && t.id !== '-1';
+  }).map(t=>{
+    let h = 'user';
+    if(t.url) h = t.url.split('/')[3] || 'user';
+    let ts = new Date();
+    try { if(t.createdAt) ts = new Date(t.createdAt); } catch{}
+    return {
+      id: t.id || Math.random().toString(36),
+      platform: 'twitter',
+      author: t['author.name'] || t.author?.name || h,
+      handle: '@' + h,
+      avatar: t['author.profilePicture'] || t.author?.profilePicture,
+      content: t.text || t.full_text || '',
+      views: t.viewCount || 0,
+      likes: t.likeCount || 0,
+      shares: t.retweetCount || 0,
+      comments: t.replyCount || 0,
+      timestamp: ts,
+      url: t.url || '',
+      source: 'Twitter'
+    };
   });
 }
 
-// Instagram - no date filter in scraping
+// Instagram - use backend proxy to avoid CORS
 async function fetchInstagram(token,kw,max,from,to){
-  const ht=kw.replace(/\s+/g,'').replace(/[^a-zA-Z0-9_]/g,'');
-  const d=await fetchApify(token,'apify~instagram-hashtag-scraper',{hashtags:[ht],resultsLimit:max,resultsType:'posts'});
-  return d.filter(p=>!p.error&&p.type!=='error').map(p=>{
-    let ts=new Date();try{if(p.timestamp&&!isNaN(p.timestamp))ts=new Date(p.timestamp*1000);else if(p.taken_at&&!isNaN(p.taken_at))ts=new Date(p.taken_at*1000);}catch{}
-    return{id:p.id||p.shortCode||Math.random().toString(36),platform:'instagram',author:p.ownerUsername||'Unknown',handle:'@'+(p.ownerUsername||'user'),avatar:p.profilePicUrl,content:p.caption||p.text||'',views:p.videoViewCount||0,likes:p.likesCount||0,shares:0,comments:p.commentsCount||0,timestamp:ts,url:p.url||`https://instagram.com/p/${p.shortCode}`,source:'Instagram'};
+  const ht = kw.replace(/\s+/g,'').replace(/[^a-zA-Z0-9_]/g,'');
+  const input = {
+    hashtags: [ht],
+    resultsLimit: max,
+    resultsType: 'posts'
+  };
+  
+  const d = await fetchApifyProxy(token, 'apify~instagram-hashtag-scraper', input);
+  
+  return d.filter(p => !p.error && p.type !== 'error').map(p=>{
+    let ts = new Date();
+    try {
+      if(p.timestamp && !isNaN(p.timestamp)) ts = new Date(p.timestamp * 1000);
+      else if(p.taken_at && !isNaN(p.taken_at)) ts = new Date(p.taken_at * 1000);
+    } catch{}
+    return {
+      id: p.id || p.shortCode || Math.random().toString(36),
+      platform: 'instagram',
+      author: p.ownerUsername || 'Unknown',
+      handle: '@' + (p.ownerUsername || 'user'),
+      avatar: p.profilePicUrl,
+      content: p.caption || p.text || '',
+      views: p.videoViewCount || 0,
+      likes: p.likesCount || 0,
+      shares: 0,
+      comments: p.commentsCount || 0,
+      timestamp: ts,
+      url: p.url || `https://instagram.com/p/${p.shortCode}`,
+      source: 'Instagram'
+    };
   });
 }
 
@@ -1948,25 +2022,117 @@ async function fetchFacebook(token,kw,max,from,to){
   });
 }
 
-// YouTube - no date filter in scraping
+// YouTube - use backend proxy to avoid CORS
 async function fetchYouTube(token,kw,max,from,to){
-  const input={searchKeywords:kw,maxResults:max};
-  const d=await fetchApify(token,'streamers~youtube-scraper',input);
+  console.log('YouTube: Using backend proxy for streamers~youtube-scraper');
+  
+  const input = {
+    searchKeywords: kw,
+    maxResults: max
+  };
+  
+  console.log('YouTube input:', JSON.stringify(input));
+  
+  // Use backend proxy to avoid CORS
+  const response = await fetch(`${API}/apify-proxy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: token,
+      actor: 'streamers~youtube-scraper',
+      input: input
+    })
+  });
+  
+  if(!response.ok) {
+    const errText = await response.text();
+    console.error('YouTube proxy error:', errText);
+    throw new Error(errText);
+  }
+  
+  const d = await response.json();
+  console.log('YouTube results:', d.length);
+  
   return d.map(v=>{
-    let ts=new Date();try{if(v.date)ts=new Date(v.date);else if(v.uploadDate)ts=new Date(v.uploadDate);}catch{}
-    return{id:v.id||Math.random().toString(36),platform:'youtube',author:v.channelName||'Unknown',handle:v.channelUrl||'',avatar:v.channel?.thumbnail||null,content:v.title||'',views:v.viewCount||v.views||0,likes:v.likes||0,shares:0,comments:v.numberOfComments||0,timestamp:ts,url:v.url||'',source:v.channelName||'YouTube'};
+    let ts=new Date();
+    try{
+      if(v.date) ts=new Date(v.date);
+      else if(v.uploadDate) ts=new Date(v.uploadDate);
+    }catch{}
+    return {
+      id: v.id || Math.random().toString(36),
+      platform: 'youtube',
+      author: v.channelName || 'Unknown',
+      handle: v.channelUrl || '',
+      avatar: v.channel?.thumbnail || null,
+      content: v.title || '',
+      views: v.viewCount || v.views || 0,
+      likes: v.likes || 0,
+      shares: 0,
+      comments: v.numberOfComments || 0,
+      timestamp: ts,
+      url: v.url || '',
+      source: v.channelName || 'YouTube'
+    };
   });
 }
 
-// News - no date filter in scraping
+// News - use backend proxy to avoid CORS
 async function fetchNews(token,kw,max,from,to){
-  const input={queries:kw,resultsPerPage:max,mobileResults:false,languageCode:'id',countryCode:'id',searchType:'news'};
-  const d=await fetchApify(token,'apify~google-search-scraper',input);
-  const res=d[0]?.organicResults||d||[];
+  console.log('News: Using backend proxy for apify~google-search-scraper');
+  
+  const input = {
+    queries: kw,
+    resultsPerPage: max,
+    mobileResults: false,
+    languageCode: 'id',
+    countryCode: 'id',
+    searchType: 'news'
+  };
+  
+  console.log('News input:', JSON.stringify(input));
+  
+  // Use backend proxy to avoid CORS
+  const response = await fetch(`${API}/apify-proxy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: token,
+      actor: 'apify~google-search-scraper',
+      input: input
+    })
+  });
+  
+  if(!response.ok) {
+    const errText = await response.text();
+    console.error('News proxy error:', errText);
+    throw new Error(errText);
+  }
+  
+  const d = await response.json();
+  console.log('News results:', d.length);
+  
+  const res = d[0]?.organicResults || d || [];
   return res.filter(n=>n&&n.url).map(n=>{
-    let ts=new Date();try{if(n.date)ts=new Date(n.date);}catch{}
-    let src='News';try{src=n.source||new URL(n.url).hostname.replace('www.','');}catch{}
-    return{id:n.url||Math.random().toString(36),platform:'news',author:src,handle:src,avatar:null,content:(n.title||'')+(n.description?' - '+n.description:''),views:0,likes:0,shares:0,comments:0,timestamp:ts,url:n.url||'',source:src};
+    let ts=new Date();
+    try{ if(n.date) ts=new Date(n.date); }catch{}
+    let src='News';
+    try{ src=n.source||new URL(n.url).hostname.replace('www.',''); }catch{}
+    return {
+      id: n.url || Math.random().toString(36),
+      platform: 'news',
+      author: src,
+      handle: src,
+      avatar: null,
+      content: (n.title||'') + (n.description?' - '+n.description:''),
+      views: 0,
+      likes: 0,
+      shares: 0,
+      comments: 0,
+      timestamp: ts,
+      url: n.url || '',
+      source: src
+    };
   });
 }
 
