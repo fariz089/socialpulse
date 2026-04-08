@@ -338,6 +338,24 @@ app.patch('/api/sessions/:id', async (req, res) => {
   }
 });
 
+// PUT /api/sessions/:id - update session (alias for PATCH)
+app.put('/api/sessions/:id', async (req, res) => {
+  const { status, total_results } = req.body;
+  try {
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (total_results !== undefined) updateData.total_results = total_results;
+    
+    await db.collection('scrape_sessions').updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updateData }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== POSTS =====
 app.post('/api/posts', async (req, res) => {
   const postsData = Array.isArray(req.body) ? req.body : [req.body];
