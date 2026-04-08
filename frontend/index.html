@@ -9,6 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
 --bg:#06060a;--bg-sidebar:#0a0a11;--bg-card:#0d0d15;--bg-elevated:#13131d;--bg-hover:#191926;
@@ -302,6 +304,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .loc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
 .loc-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;}
 .loc-card:hover{border-color:var(--accent);transform:translateY(-2px);background:var(--bg-hover);}
+
+/* LOCATIONS MAP */
+.loc-map-container{display:grid;grid-template-columns:1fr 340px;gap:12px;height:520px;}
+@media(max-width:1100px){.loc-map-container{grid-template-columns:1fr;height:auto;}}
+#loc-map{height:100%;min-height:400px;border-radius:var(--r);background:#0d1117;z-index:1;}
+.loc-sidebar{display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:520px;}
+.loc-city-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;}
+.loc-city-card:hover{border-color:var(--accent);background:var(--bg-hover);}
+.loc-city-card.active{border-color:var(--green);background:rgba(16,185,129,0.1);}
+.loc-city-info{display:flex;flex-direction:column;gap:2px;}
+.loc-city-name{font-weight:600;font-size:12px;}
+.loc-city-stat{font-size:10px;color:var(--text-3);}
+.loc-city-badge{background:var(--accent);color:white;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.leaflet-popup-content-wrapper{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.leaflet-popup-tip{background:var(--bg-card);border-left:1px solid var(--border);border-top:1px solid var(--border);}
+.leaflet-popup-content{margin:10px;font-family:'DM Sans',sans-serif;}
+.map-popup{max-width:280px;}
+.map-popup-title{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.map-popup-stat{font-size:11px;color:var(--text-2);margin-bottom:8px;}
+.map-popup-posts{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.map-post-item{padding:8px;background:var(--bg-elevated);border-radius:var(--r-sm);cursor:pointer;transition:background 0.15s;border:1px solid var(--border);}
+.map-post-item:hover{background:var(--bg-hover);border-color:var(--accent);}
+.map-post-author{font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px;margin-bottom:3px;}
+.map-post-content{font-size:9px;color:var(--text-2);line-height:1.4;}
+.map-post-meta{font-size:8px;color:var(--text-3);margin-top:4px;display:flex;gap:8px;}
+.loc-view-toggle{display:flex;gap:4px;margin-bottom:8px;}
+.loc-view-btn{padding:6px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text-2);font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.loc-view-btn:hover{border-color:var(--accent);color:var(--text);}
+.loc-view-btn.active{background:var(--accent);border-color:var(--accent);color:white;}
 .loc-city{font-size:12px;font-weight:700;margin-bottom:2px;}
 .loc-count{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent-2);}
 .loc-sub{font-size:9px;color:var(--text-3);}
@@ -858,6 +889,190 @@ function authHeaders() {
 
 // ===== CONSTANTS =====
 const CITIES=["Jakarta","Surabaya","Bandung","Medan","Semarang","Makassar","Palembang","Tangerang","Depok","Bekasi","Malang","Yogyakarta","Jogja","Denpasar","Bali","Surakarta","Solo","Balikpapan","Banjarmasin","Pontianak","Manado","Padang","Pekanbaru","Batam","Bogor","Cirebon","Tasikmalaya","Garut","Sukabumi","Karawang","Purwokerto","Tegal","Pekalongan","Magelang","Kediri","Jember","Blitar","Probolinggo","Pasuruan","Mojokerto","Madiun","Ngawi","Tuban","Lamongan","Gresik","Sidoarjo","Bangkalan","Pamekasan","Sumenep","Lumajang","Banyuwangi","Situbondo","Bondowoso","Tulungagung","Trenggalek","Pacitan","Ponorogo","Magetan","Nganjuk","Lombok","Mataram","Kupang","Ambon","Jayapura","Sorong","Ternate","Gorontalo","Palu","Kendari","Samarinda","Tarakan","Bontang","Palangkaraya","Jambi","Bengkulu","Lampung","Bandar Lampung","Aceh","Banda Aceh","Pati"];
+
+// City coordinates for Indonesia
+const CITY_COORDS={
+  "Jakarta":[-6.2088,106.8456],"Surabaya":[-7.2575,112.7521],"Bandung":[-6.9175,107.6191],"Medan":[3.5952,98.6722],"Semarang":[-6.9666,110.4196],
+  "Makassar":[-5.1477,119.4327],"Palembang":[-2.9761,104.7754],"Tangerang":[-6.1702,106.6403],"Depok":[-6.4025,106.7942],"Bekasi":[-6.2383,106.9756],
+  "Malang":[-7.9786,112.6317],"Yogyakarta":[-7.7956,110.3695],"Jogja":[-7.7956,110.3695],"Denpasar":[-8.6705,115.2126],"Bali":[-8.4095,115.1889],
+  "Surakarta":[-7.5755,110.8243],"Solo":[-7.5755,110.8243],"Balikpapan":[-1.2379,116.8529],"Banjarmasin":[-3.3194,114.5908],"Pontianak":[-0.0263,109.3425],
+  "Manado":[1.4748,124.8421],"Padang":[-0.9471,100.4172],"Pekanbaru":[0.5071,101.4478],"Batam":[1.0456,104.0305],"Bogor":[-6.5971,106.8060],
+  "Cirebon":[-6.7063,108.5570],"Tasikmalaya":[-7.3506,108.2172],"Garut":[-7.2175,107.9089],"Sukabumi":[-6.9277,106.9300],"Karawang":[-6.3227,107.3376],
+  "Purwokerto":[-7.4213,109.2341],"Tegal":[-6.8694,109.1402],"Pekalongan":[-6.8885,109.6753],"Magelang":[-7.4797,110.2177],"Kediri":[-7.8480,111.8783],
+  "Jember":[-8.1845,113.6681],"Blitar":[-8.0983,112.1681],"Probolinggo":[-7.7543,113.2159],"Pasuruan":[-7.6469,112.9075],"Mojokerto":[-7.4704,112.4401],
+  "Madiun":[-7.6298,111.5230],"Ngawi":[-7.4041,111.4461],"Tuban":[-6.8986,112.0506],"Lamongan":[-7.1191,112.4175],"Gresik":[-7.1641,112.6508],
+  "Sidoarjo":[-7.4478,112.7183],"Bangkalan":[-7.0456,112.7356],"Pamekasan":[-7.1583,113.4681],"Sumenep":[-7.0167,113.8667],"Lumajang":[-8.1333,113.2167],
+  "Banyuwangi":[-8.2192,114.3692],"Situbondo":[-7.7061,114.0097],"Bondowoso":[-7.9133,113.8217],"Tulungagung":[-8.0667,111.9000],"Trenggalek":[-8.0500,111.7000],
+  "Pacitan":[-8.2000,111.1000],"Ponorogo":[-7.8683,111.4628],"Magetan":[-7.6478,111.3589],"Nganjuk":[-7.6050,111.9028],"Lombok":[-8.5833,116.1167],
+  "Mataram":[-8.5833,116.1167],"Kupang":[-10.1787,123.6070],"Ambon":[-3.6954,128.1814],"Jayapura":[-2.5337,140.7181],"Sorong":[-0.8636,131.2550],
+  "Ternate":[0.7833,127.3833],"Gorontalo":[0.5435,123.0568],"Palu":[-0.9002,119.8779],"Kendari":[-3.9985,122.5129],"Samarinda":[-0.5022,117.1536],
+  "Tarakan":[3.3000,117.6333],"Bontang":[0.1333,117.5000],"Palangkaraya":[-2.2136,113.9108],"Jambi":[-1.6101,103.6131],"Bengkulu":[-3.7928,102.2608],
+  "Lampung":[-5.4500,105.2667],"Bandar Lampung":[-5.4500,105.2667],"Aceh":[5.5483,95.3238],"Banda Aceh":[5.5483,95.3238],"Pati":[-6.7500,111.0400]
+};
+
+let locMap=null;
+let locMarkers=[];
+let currentLocView='map';
+
+function setLocView(view){
+  currentLocView=view;
+  document.querySelectorAll('.loc-view-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.loc-view-btn[onclick="setLocView('${view}')"]`)?.classList.add('active');
+  document.getElementById('loc-map-view').style.display=view==='map'?'block':'none';
+  document.getElementById('loc-grid-view').style.display=view==='grid'?'block':'none';
+  if(view==='map'&&locMap){setTimeout(()=>locMap.invalidateSize(),100);}
+}
+
+function initLocationMap(cityData){
+  const mapEl=document.getElementById('loc-map');
+  if(!mapEl)return;
+  
+  // Destroy existing map
+  if(locMap){locMap.remove();locMap=null;}
+  locMarkers=[];
+  
+  // Create map centered on Indonesia
+  locMap=L.map('loc-map',{
+    center:[-2.5,118],
+    zoom:5,
+    zoomControl:false,
+    attributionControl:false
+  });
+  
+  // Add zoom control to right
+  L.control.zoom({position:'topright'}).addTo(locMap);
+  
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    maxZoom:19
+  }).addTo(locMap);
+  
+  // Get max count for scaling
+  const maxCount=Math.max(...cityData.map(([,c])=>c),1);
+  
+  // Add markers with circles
+  cityData.forEach(([city,count])=>{
+    const coords=CITY_COORDS[city];
+    if(!coords)return;
+    
+    // Calculate radius based on count (min 12, max 40)
+    const radius=12+Math.min(28,(count/maxCount)*28);
+    
+    // Color based on count intensity
+    const intensity=Math.min(1,count/maxCount);
+    const color=intensity>0.7?'#10b981':intensity>0.4?'#f59e0b':'#6366f1';
+    
+    // Create circle marker
+    const marker=L.circleMarker(coords,{
+      radius:radius,
+      fillColor:color,
+      color:'rgba(255,255,255,0.3)',
+      weight:2,
+      opacity:1,
+      fillOpacity:0.8
+    }).addTo(locMap);
+    
+    // Add count label
+    const icon=L.divIcon({
+      className:'loc-marker-label',
+      html:`<div style="color:white;font-weight:700;font-size:${radius>20?'12px':'10px'};text-shadow:0 1px 3px rgba(0,0,0,0.8);">${count}</div>`,
+      iconSize:[radius*2,radius*2],
+      iconAnchor:[radius,radius]
+    });
+    const labelMarker=L.marker(coords,{icon:icon,interactive:false}).addTo(locMap);
+    
+    // Click handler - show popup with posts
+    marker.on('click',()=>showCityPopup(city,count,coords));
+    
+    locMarkers.push({marker,labelMarker,city,count});
+  });
+  
+  // Render sidebar list
+  renderCitySidebar(cityData);
+  
+  // Fit bounds if we have markers
+  if(cityData.length>0){
+    const validCoords=cityData.filter(([c])=>CITY_COORDS[c]).map(([c])=>CITY_COORDS[c]);
+    if(validCoords.length>0){
+      const bounds=L.latLngBounds(validCoords);
+      locMap.fitBounds(bounds,{padding:[30,30]});
+    }
+  }
+}
+
+function renderCitySidebar(cityData){
+  const listEl=document.getElementById('loc-city-list');
+  if(!listEl)return;
+  
+  listEl.innerHTML=cityData.length?cityData.map(([city,count],i)=>`
+    <div class="loc-city-card" onclick="focusCity('${city}')" data-city="${city}">
+      <div class="loc-city-info">
+        <div class="loc-city-name"><i class="fas fa-map-marker-alt" style="color:${i<3?'#10b981':i<7?'#f59e0b':'#6366f1'};margin-right:4px;"></i>${city}</div>
+        <div class="loc-city-stat">${count} mentions</div>
+      </div>
+      <div class="loc-city-badge">#${i+1}</div>
+    </div>
+  `).join(''):'<div style="padding:20px;text-align:center;color:var(--text-3);"><i class="fas fa-map-marker-alt" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px;"></i>No location data</div>';
+}
+
+function focusCity(city){
+  const coords=CITY_COORDS[city];
+  if(!coords||!locMap)return;
+  
+  // Highlight sidebar item
+  document.querySelectorAll('.loc-city-card').forEach(c=>c.classList.remove('active'));
+  document.querySelector(`.loc-city-card[data-city="${city}"]`)?.classList.add('active');
+  
+  // Fly to city
+  locMap.flyTo(coords,10,{duration:0.8});
+  
+  // Find marker and show popup
+  const markerData=locMarkers.find(m=>m.city===city);
+  if(markerData){
+    const cityPosts=posts.filter(p=>{
+      const pCities=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);
+      return pCities.includes(city)||(p.content||'').toLowerCase().includes(city.toLowerCase());
+    });
+    showCityPopup(city,markerData.count,coords);
+  }
+}
+
+function showCityPopup(city,count,coords){
+  if(!locMap)return;
+  
+  // Get posts for this city
+  const cityPosts=posts.filter(p=>{
+    const pCities=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);
+    return pCities.includes(city)||(p.content||'').toLowerCase().includes(city.toLowerCase());
+  }).slice(0,8);
+  
+  const postsHtml=cityPosts.length?cityPosts.map(p=>{
+    const cfg=P_CFG[p.platform]||P_CFG.tiktok;
+    const url=p.url||'';
+    return`<div class="map-post-item" ${url?`onclick="window.open('${url}','_blank')"`:''}">
+      <div class="map-post-author"><i class="${cfg.icon}" style="color:${cfg.color}"></i> ${(p.author||'Unknown').substring(0,20)}</div>
+      <div class="map-post-content">${(p.content||'').substring(0,80)}${(p.content||'').length>80?'...':''}</div>
+      <div class="map-post-meta"><span><i class="fas fa-eye"></i> ${fmt(p.views||0)}</span><span><i class="fas fa-heart"></i> ${fmt(p.likes||0)}</span>${url?'<span style="color:var(--accent)"><i class="fas fa-external-link-alt"></i> Open</span>':''}</div>
+    </div>`;
+  }).join(''):'<div style="color:var(--text-3);font-size:10px;padding:8px;">No posts found</div>';
+  
+  const popupContent=`
+    <div class="map-popup">
+      <div class="map-popup-title"><i class="fas fa-map-marker-alt" style="color:var(--green)"></i> ${city}</div>
+      <div class="map-popup-stat">${count} mentions found</div>
+      <div class="map-popup-posts">${postsHtml}</div>
+      <div style="margin-top:8px;text-align:center;">
+        <button class="btn btn-primary btn-sm" onclick="openDrilldown('${city}','map-marker-alt',p=>{const c=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):[];return c.includes('${city}')||(p.content||'').toLowerCase().includes('${city.toLowerCase()}');})"><i class="fas fa-list"></i> View All Posts</button>
+      </div>
+    </div>
+  `;
+  
+  L.popup({maxWidth:300,className:'dark-popup'})
+    .setLatLng(coords)
+    .setContent(popupContent)
+    .openOn(locMap);
+}
+
 const POS_W=["bagus","keren","mantap","mantep","suka","love","amazing","great","good","awesome","best","recommended","rekomen","worth","wajib","top","jos","gokil","nyaman","mewah","enak","puas","senang","happy","excellent","perfect","thanks","terima kasih","terbaik","favorit","super","sukses","kece","premium"];
 const NEG_W=["jelek","buruk","kecewa","disappointed","bad","worst","terrible","awful","poor","hate","benci","marah","angry","gagal","fail","scam","penipuan","bohong","bodong","lambat","lelet","rusak","error","komplain","telat","delay","kotor","negatif"];
 const P_CFG={tiktok:{icon:'fab fa-tiktok',color:'#00f2ea',grad:'linear-gradient(135deg,#00f2ea,#ff0050)'},twitter:{icon:'fab fa-twitter',color:'#1da1f2',grad:'#1da1f2'},instagram:{icon:'fab fa-instagram',color:'#e1306c',grad:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)'},facebook:{icon:'fab fa-facebook',color:'#1877f2',grad:'#1877f2'},youtube:{icon:'fab fa-youtube',color:'#ff0000',grad:'#ff0000'},news:{icon:'fas fa-newspaper',color:'#f97316',grad:'#f97316'}};
@@ -1350,7 +1565,7 @@ function renderView(stats){
   } else if(currentView==='sna'){
     html+=`<div class="grid-2-1"><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-project-diagram"></i> Social Network Analysis</span><span style="font-size:9px;color:var(--text-3)">Klik node untuk melihat posts</span></div><div class="sna-box" id="sna-graph"></div></div><div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-users"></i> Top People</span></div><div class="sna-stat-list" id="sna-people"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-hashtag"></i> Top Issues</span></div><div class="sna-stat-list" id="sna-issues"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-globe"></i> Top Sources</span></div><div class="sna-stat-list" id="sna-sources"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-map-marker-alt"></i> Top Locations</span></div><div class="sna-stat-list" id="sna-locations"></div></div></div></div>`;
   } else if(currentView==='locations'){
-    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-map-marker-alt"></i> Mention Locations</span><span style="font-size:9px;color:var(--text-3)">Klik kota untuk melihat posts</span></div><div class="loc-grid" id="r-locations"></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Location Distribution</span></div><div class="chart-box"><canvas id="c-loc"></canvas></div></div>`;
+    html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-globe-asia"></i> Location Map</span><div class="loc-view-toggle"><button class="loc-view-btn active" onclick="setLocView('map')"><i class="fas fa-map"></i> Map</button><button class="loc-view-btn" onclick="setLocView('grid')"><i class="fas fa-th"></i> Grid</button></div></div><div id="loc-map-view"><div class="loc-map-container"><div id="loc-map"></div><div class="loc-sidebar" id="loc-city-list"></div></div></div><div id="loc-grid-view" style="display:none;"><div class="loc-grid" id="r-locations"></div></div></div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Location Distribution</span></div><div class="chart-box"><canvas id="c-loc"></canvas></div></div>`;
   } else if(currentView==='timeline'){
     html+=`<div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-stream"></i> Timeline & Issues</span><span style="font-size:9px;color:var(--text-3)">Klik post untuk buka link</span></div><div class="timeline" id="r-timeline"></div></div>`;
   } else if(currentView==='media'){
@@ -1461,8 +1676,14 @@ function renderCharts(stats){
   if(currentView==='locations'){
     const cityMap={};posts.forEach(p=>{const pC=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):findCities(p.content);pC.forEach(c=>cityMap[c]=(cityMap[c]||0)+1);});
     const sortedCities=Object.entries(cityMap).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    
+    // Initialize interactive map
+    setTimeout(()=>initLocationMap(sortedCities),100);
+    
+    // Also render grid view
     const locEl=document.getElementById('r-locations');
     if(locEl)locEl.innerHTML=sortedCities.length?sortedCities.map(([city,count])=>`<div class="loc-card" onclick="openDrilldown('${city}','map-marker-alt',p=>{const c=p.cities?(Array.isArray(p.cities)?p.cities:JSON.parse(p.cities||'[]')):[];return c.includes('${city}')||(p.content||'').toLowerCase().includes('${city.toLowerCase()}');})""><div class="loc-city">${city}</div><div class="loc-count">${count}</div><div class="loc-sub">mentions</div></div>`).join(''):'<div class="empty" style="grid-column:1/-1;"><p>Tidak ada data lokasi</p></div>';
+    
     const elLoc=document.getElementById('c-loc');
     if(elLoc&&sortedCities.length>0){const top15=sortedCities.slice(0,15);charts.loc=new Chart(elLoc,{type:'bar',data:{labels:top15.map(([c])=>c),datasets:[{data:top15.map(([,v])=>v),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178'}}}}});}
   }
