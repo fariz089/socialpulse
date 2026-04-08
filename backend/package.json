@@ -1,7 +1,7 @@
 {
   "name": "slaytics-backend",
-  "version": "1.0.0",
-  "description": "Slaytics Backend API with SQLite and Authentication",
+  "version": "2.0.0",
+  "description": "Slaytics Backend API with MongoDB and Authentication",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.7.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.3.0",
     "node-fetch": "^3.3.2"
   }
 }

@@ -182,8 +182,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sent-score{font-size:24px;font-weight:800;}
 .sent-lbl{font-size:8px;color:var(--text-3);}
 .sent-legend{flex:1;}
-.leg-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
+.leg-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);transition:all 0.15s;}
 .leg-item:last-child{border-bottom:none;}
+.leg-item[onclick]{cursor:pointer;padding:6px 8px;margin:0 -8px;border-radius:6px;}
+.leg-item[onclick]:hover{background:var(--bg-hover);}
 .leg-left{display:flex;align-items:center;gap:6px;}
 .leg-dot{width:8px;height:8px;border-radius:3px;}
 .leg-name{font-size:10px;}
@@ -277,6 +279,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .plat-item{cursor:pointer;transition:all 0.15s;}.plat-item:hover{background:var(--bg-hover);transform:translateX(3px);}
 .creator-item{cursor:pointer;transition:all 0.15s;}.creator-item:hover{background:var(--bg-hover);transform:translateX(3px);}
 .word-item{cursor:pointer;}.treemap-item{cursor:pointer;transition:transform 0.15s;}.treemap-item:hover{transform:scale(1.03);}
+.top-posts-list{display:flex;flex-direction:column;gap:4px;}
+.top-post-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-elevated);border-radius:var(--r-sm);cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
+.top-post-item:hover{background:var(--bg-hover);border-color:var(--accent);transform:translateX(3px);}
+.top-post-rank{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--accent);color:white;flex-shrink:0;}
+.top-post-rank.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);}
+.top-post-rank.silver{background:linear-gradient(135deg,#9ca3af,#6b7280);}
+.top-post-rank.bronze{background:linear-gradient(135deg,#d97706,#b45309);}
+.top-post-info{flex:1;min-width:0;}
+.top-post-author{font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.top-post-author i{font-size:10px;}
+.top-post-preview{font-size:9px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.top-post-stats{text-align:right;flex-shrink:0;}
+.top-post-reach{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--tiktok);}
+.top-post-sub{font-size:8px;color:var(--text-3);}
+.stat-card{transition:all 0.15s;}.stat-card[onclick]:hover{background:var(--bg-hover);transform:translateY(-2px);}
 .sna-box{height:400px;background:var(--bg-elevated);border-radius:var(--r-sm);position:relative;overflow:hidden;}
 .sna-stat-list{max-height:180px;overflow-y:auto;}
 .sna-stat-row{font-size:10px;padding:5px 6px;display:flex;justify-content:space-between;cursor:pointer;border-radius:4px;transition:all 0.15s;}
@@ -403,6 +420,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <span style="font-size:10px;color:var(--text-3);" id="topbar-date"></span>
       <span style="font-size:9px;color:var(--text-3);padding:4px 8px;background:var(--bg-elevated);border-radius:12px;display:none;" id="last-scrape-badge" title="Last scrape date"><i class="fas fa-clock"></i> <span id="last-scrape-text">-</span></span>
       <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="exportJSON()" title="Export data untuk AI Analysis"><i class="fas fa-file-code"></i> JSON</button>
       <button class="btn btn-gradient btn-sm" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> PDF</button>
       <button class="btn btn-success btn-sm" id="btn-scrape" onclick="openScrapeModal()"><i class="fas fa-sync-alt"></i> Update Data</button>
       <div style="position:relative;margin-left:8px;" id="user-menu-container">
@@ -886,7 +904,11 @@ function openDrilldown(title,icon,filterFn){
   const filtered=posts.filter(filterFn);
   document.getElementById('drilldown-title').innerHTML=`<i class="fas fa-${icon}"></i> ${title} <span class="drilldown-count">${filtered.length} posts</span>`;
   const kws=Array.isArray(currentProject?.keywords)?currentProject.keywords:[currentProject?.keywords||''];
-  document.getElementById('drilldown-content').innerHTML=filtered.length?filtered.slice(0,50).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return `<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:${c.grad}"><img src="${p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36`}" onerror="this.style.display='none'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''}</div></div></div><div class="feed-meta"><span style="color:${c.color}"><i class="${c.icon}"></i></span> <span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${(p.content||'').substring(0,200)}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><p>No posts found</p></div>';
+  document.getElementById('drilldown-content').innerHTML=filtered.length?filtered.map(p=>{
+    const c=P_CFG[p.platform]||P_CFG.tiktok;
+    const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    return `<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:${c.grad}"><img src="${p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36`}" onerror="this.style.display='none'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?`<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• ${postDate}</span>`:''}</div></div></div><div class="feed-meta"><span style="color:${c.color}"><i class="${c.icon}"></i></span> <span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${(p.content||'').substring(0,200)}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;
+  }).join(''):'<div class="empty"><p>No posts found</p></div>';
   document.getElementById('drilldown-overlay').classList.add('active');
 }
 function closeDrilldown(){document.getElementById('drilldown-overlay').classList.remove('active');}
@@ -1199,7 +1221,7 @@ async function loadProjectData(){
   try{
     const[statsRes,postsRes]=await Promise.all([
       fetch(`${API}/stats/${currentProject.id}?${params}`),
-      fetch(`${API}/posts?project_id=${currentProject.id}&date_from=${dateFrom}&date_to=${dateTo}&limit=200&sort=views`)
+      fetch(`${API}/posts?project_id=${currentProject.id}&date_from=${dateFrom}&date_to=${dateTo}&limit=10000&sort=views`)
     ]);
     const stats=await statsRes.json();
     const postsData=await postsRes.json();
@@ -1229,14 +1251,14 @@ function renderView(stats){
   const neuP=Math.round(((totals.neutral||0)/safeTotal)*100);
   const score=Math.round((((totals.positive||0)-(totals.negative||0))/safeTotal)*100);
 
-  // Build stats bar
+  // Build stats bar - clickable cards
   let html=`<div class="stats-row">
-    <div class="stat-card s-total"><div class="stat-label">Total Mentions</div><div class="stat-value">${fmt(totals.total)}</div><div class="stat-sub">across all platforms</div></div>
+    <div class="stat-card s-total" style="cursor:pointer" onclick="switchView('mentions')" title="Klik untuk lihat semua mentions"><div class="stat-label">Total Mentions</div><div class="stat-value">${fmt(totals.total)}</div><div class="stat-sub">across all platforms</div></div>
     <div class="stat-card s-reach"><div class="stat-label">Total Reach</div><div class="stat-value">${fmt(totals.total_views)}</div><div class="stat-sub">impressions</div></div>
     <div class="stat-card s-engagement"><div class="stat-label">Engagement</div><div class="stat-value">${fmt(totals.total_likes)}</div><div class="stat-sub">likes + reactions</div></div>
     <div class="stat-card s-shares"><div class="stat-label">Shares</div><div class="stat-value">${fmt(totals.total_shares)}</div><div class="stat-sub">viral reach</div></div>
-    <div class="stat-card s-positive"><div class="stat-label">Positive</div><div class="stat-value" style="color:var(--green)">${fmt(totals.positive)}</div><div class="stat-sub">${posP}%</div></div>
-    <div class="stat-card s-negative"><div class="stat-label">Negative</div><div class="stat-value" style="color:var(--red)">${fmt(totals.negative)}</div><div class="stat-sub">${negP}%</div></div>
+    <div class="stat-card s-positive" style="cursor:pointer" onclick="openDrilldown('Positive Posts','smile',p=>p.sentiment==='positive')" title="Klik untuk lihat posts positif"><div class="stat-label">Positive</div><div class="stat-value" style="color:var(--green)">${fmt(totals.positive)}</div><div class="stat-sub">${posP}%</div></div>
+    <div class="stat-card s-negative" style="cursor:pointer" onclick="openDrilldown('Negative Posts','frown',p=>p.sentiment==='negative')" title="Klik untuk lihat posts negatif"><div class="stat-label">Negative</div><div class="stat-value" style="color:var(--red)">${fmt(totals.negative)}</div><div class="stat-sub">${negP}%</div></div>
   </div>`;
 
   if(currentView==='dashboard'){
@@ -1245,14 +1267,14 @@ function renderView(stats){
     html+=`<div class="engage-cards"><div class="engage-card"><div class="ec-val" style="color:var(--accent)">${fmt(totals.total_likes)}</div><div class="ec-lbl">Likes</div></div><div class="engage-card"><div class="ec-val" style="color:var(--green)">${fmt(totals.total_comments||0)}</div><div class="ec-lbl">Comments</div></div><div class="engage-card"><div class="ec-val" style="color:var(--pink)">${fmt(totals.total_shares)}</div><div class="ec-lbl">Shares</div></div><div class="engage-card"><div class="ec-val" style="color:var(--yellow)">${avgEng}</div><div class="ec-lbl">Avg Engagement/Post</div></div></div>`;
     html+=`<div class="grid-2-1">
       <div><div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-chart-bar"></i> Discussion Volume</span></div><div class="chart-box"><canvas id="c-volume"></canvas></div></div>
-      <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-fire"></i> Top Posts by Reach</span></div><div class="chart-box"><canvas id="c-top"></canvas></div></div></div>
+      <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-fire"></i> Top Posts by Reach</span><span style="font-size:9px;color:var(--text-3)">Klik untuk buka</span></div><div class="top-posts-list" id="r-top-posts" style="max-height:240px;overflow-y:auto;"></div></div></div>
       <div>
         <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-brain"></i> Sentiment</span></div>
           <div class="sent-wrap"><div class="sent-chart"><canvas id="c-sent"></canvas><div class="sent-center"><div class="sent-score" id="s-score">${score>0?'+':''}${score}</div><div class="sent-lbl">Score</div></div></div>
           <div class="sent-legend">
-            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--green)"></div><span class="leg-name">Positive</span></div><div><span class="leg-val">${totals.positive||0}</span><span class="leg-pct">(${posP}%)</span></div></div>
-            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--yellow)"></div><span class="leg-name">Neutral</span></div><div><span class="leg-val">${totals.neutral||0}</span><span class="leg-pct">(${neuP}%)</span></div></div>
-            <div class="leg-item"><div class="leg-left"><div class="leg-dot" style="background:var(--red)"></div><span class="leg-name">Negative</span></div><div><span class="leg-val">${totals.negative||0}</span><span class="leg-pct">(${negP}%)</span></div></div>
+            <div class="leg-item" style="cursor:pointer" onclick="openDrilldown('Positive Posts','smile',p=>p.sentiment==='positive')" title="Klik untuk lihat posts positif"><div class="leg-left"><div class="leg-dot" style="background:var(--green)"></div><span class="leg-name">Positive</span></div><div><span class="leg-val">${totals.positive||0}</span><span class="leg-pct">(${posP}%)</span></div></div>
+            <div class="leg-item" style="cursor:pointer" onclick="openDrilldown('Neutral Posts','meh',p=>p.sentiment==='neutral')" title="Klik untuk lihat posts netral"><div class="leg-left"><div class="leg-dot" style="background:var(--yellow)"></div><span class="leg-name">Neutral</span></div><div><span class="leg-val">${totals.neutral||0}</span><span class="leg-pct">(${neuP}%)</span></div></div>
+            <div class="leg-item" style="cursor:pointer" onclick="openDrilldown('Negative Posts','frown',p=>p.sentiment==='negative')" title="Klik untuk lihat posts negatif"><div class="leg-left"><div class="leg-dot" style="background:var(--red)"></div><span class="leg-name">Negative</span></div><div><span class="leg-val">${totals.negative||0}</span><span class="leg-pct">(${negP}%)</span></div></div>
           </div></div></div>
         <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-th-large"></i> Platforms</span></div><div class="plat-list" id="r-plats"></div></div>
         <div class="card"><div class="card-header"><span class="card-title"><i class="fas fa-cloud"></i> Trending</span></div><div class="word-cloud" id="r-cloud"></div></div>
@@ -1304,17 +1326,35 @@ function renderCharts(stats){
     const colors=['rgba(0,242,234,0.7)','rgba(29,161,242,0.7)','rgba(225,48,108,0.7)','rgba(24,119,242,0.7)','rgba(255,0,0,0.7)','rgba(249,115,22,0.7)'];
     const el1=document.getElementById('c-volume');if(el1)charts.vol=new Chart(el1,{type:'bar',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:platNames.map((p,i)=>({label:p.charAt(0).toUpperCase()+p.slice(1),data:dates.map(d=>dateMap[d]?.[p]||0),backgroundColor:colors[i],borderRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178',font:{size:9}}}}}});
 
-    // Top posts
+    // Top posts - clickable list with links
     const topP=[...posts].sort((a,b)=>b.views-a.views).slice(0,8);
-    const el2=document.getElementById('c-top');if(el2)charts.top=new Chart(el2,{type:'bar',data:{labels:topP.map(p=>(p.author||'').substring(0,12)),datasets:[{data:topP.map(p=>p.views),backgroundColor:'rgba(99,102,241,0.7)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178',font:{size:9},callback:v=>fmt(v)}},y:{grid:{display:false},ticks:{color:'#9298a8',font:{size:9}}}}}});
+    const topPostsEl=document.getElementById('r-top-posts');
+    if(topPostsEl){
+      topPostsEl.innerHTML=topP.length?topP.map((p,i)=>{
+        const c=P_CFG[p.platform]||P_CFG.tiktok;
+        const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+        const preview=(p.content||'').substring(0,60);
+        return`<div class="top-post-item" onclick="${p.url?`window.open('${p.url}','_blank')`:''}" title="${p.url?'Klik untuk buka postingan':'URL tidak tersedia'}">
+          <div class="top-post-rank ${rankClass}">${i+1}</div>
+          <div class="top-post-info">
+            <div class="top-post-author"><i class="${c.icon}" style="color:${c.color}"></i> ${(p.author||'Unknown').substring(0,20)}</div>
+            <div class="top-post-preview">${preview}${preview.length>=60?'...':''}</div>
+          </div>
+          <div class="top-post-stats">
+            <div class="top-post-reach">${fmt(p.views)}</div>
+            <div class="top-post-sub">reach</div>
+          </div>
+        </div>`;
+      }).join(''):'<div class="empty"><p>No posts yet</p></div>';
+    }
 
     // Sentiment donut
     const el3=document.getElementById('c-sent');if(el3)charts.sent=new Chart(el3,{type:'doughnut',data:{labels:['Positive','Neutral','Negative'],datasets:[{data:[stats.totals.positive,stats.totals.neutral,stats.totals.negative],backgroundColor:['#10b981','#f59e0b','#ef4444'],borderWidth:0,cutout:'72%'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}}}});
 
-    // Platforms
+    // Platforms - clickable to filter by platform
     const maxP=Math.max(...stats.byPlatform.map(p=>p.count),1);
     const plEl=document.getElementById('r-plats');
-    if(plEl)plEl.innerHTML=stats.byPlatform.map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return`<div class="plat-item"><div class="plat-icon ${p.platform}"><i class="${c.icon}"></i></div><div class="plat-info"><div class="plat-name">${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</div><div class="plat-bar"><div class="plat-fill" style="width:${(p.count/maxP)*100}%;background:${c.grad}"></div></div></div><div class="plat-count">${p.count}</div></div>`;}).join('')||'<div class="empty"><p>No data</p></div>';
+    if(plEl)plEl.innerHTML=stats.byPlatform.map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;return`<div class="plat-item" onclick="openDrilldown('${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)} Posts','${c.icon.replace('fab fa-','').replace('fas fa-','')}',post=>post.platform==='${p.platform}')" title="Klik untuk lihat posts ${p.platform}"><div class="plat-icon ${p.platform}"><i class="${c.icon}"></i></div><div class="plat-info"><div class="plat-name">${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</div><div class="plat-bar"><div class="plat-fill" style="width:${(p.count/maxP)*100}%;background:${c.grad}"></div></div></div><div class="plat-count">${p.count}</div></div>`;}).join('')||'<div class="empty"><p>No data</p></div>';
 
     // Word cloud
     const ht=stats.topHashtags||{};const sorted=Object.entries(ht).sort((a,b)=>b[1]-a[1]).slice(0,12);
@@ -1875,6 +1915,26 @@ async function fetchNews(token,kw,max,from,to){
 
 // ===== EXPORTS =====
 function exportCSV(){if(posts.length===0){toast('error','Error','No data');return;}const h=['Platform','Author','Content','Views','Likes','Shares','Sentiment','Source','URL','Date'];const rows=posts.map(p=>[p.platform,p.author,`"${(p.content||'').replace(/"/g,'""').replace(/\n/g,' ')}"`,p.views,p.likes,p.shares,p.sentiment,p.source_name||'',p.url||'',p.post_date||'']);const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`socialpulse_${currentProject?.name||'export'}_${new Date().toISOString().split('T')[0]}.csv`;a.click();toast('success','Exported!',`${posts.length} records`);}
+
+async function exportJSON(){
+  if(!currentProject){toast('error','Error','No project selected');return;}
+  toast('info','Exporting JSON...','Preparing data for AI analysis...');
+  try{
+    const url=`${API}/export/${currentProject.id}?date_from=${dateFrom}&date_to=${dateTo}&format=json`;
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('Export failed');
+    const data=await res.json();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`${currentProject.name}_${dateFrom}_to_${dateTo}.json`;
+    a.click();
+    toast('success','JSON Exported!',`${data.posts?.length||0} posts exported for AI analysis`);
+  }catch(e){
+    console.error('Export error:',e);
+    toast('error','Export Failed',e.message);
+  }
+}
 
 async function generatePDF(){
   if(posts.length===0){toast('error','Error','No data for report');return;}

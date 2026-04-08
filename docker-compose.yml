@@ -1,26 +1,42 @@
 version: "3.8"
 
 services:
+  mongo:
+    image: mongo:7
+    container_name: slaytics-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=slaytics
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-slaytics_admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}
+
   backend:
     build: ./backend
+    container_name: slaytics-api
     ports:
-      - "3001:3001"
-    volumes:
-      - db_data:/app/data
+      - "${API_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
-      - DB_PATH=/app/data/slaytics.db
-      - JWT_SECRET=${JWT_SECRET:-slaytics-production-secret-change-me}
+      - MONGO_URI=mongodb://${MONGO_USERNAME:-slaytics_admin}:${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}@mongo:27017
+      - DB_NAME=slaytics
+      - JWT_SECRET=${JWT_SECRET:-slaytics-jwt-secret-change-in-production}
       - PORT=3001
+    depends_on:
+      - mongo
     restart: unless-stopped
 
   frontend:
     build: ./frontend
+    container_name: slaytics-web
     ports:
-      - "8090:80"
+      - "${WEB_PORT:-80}:80"
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
-  db_data:
+  mongo_data:
