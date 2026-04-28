@@ -1158,13 +1158,46 @@ async function loadORToken(){
 async function callOpenRouter(systemPrompt, userPrompt){
   const token=await getORToken();
   if(!token){toast('error','Token Required','Set OpenRouter token di Settings');openModal('modal-settings');return null;}
-  const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body:JSON.stringify({model:'google/gemini-2.0-flash-001',messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],temperature:0.7,max_tokens:4000})
-  });
-  if(!r.ok){const err=await r.text();throw new Error('OpenRouter error: '+err);}
-  const d=await r.json();
-  return d.choices?.[0]?.message?.content||'No response';
+
+  // Model fallback list — jika model pertama rate-limited, otomatis coba berikutnya
+  const MODELS = [
+    'google/gemini-2.0-flash-lite-001',
+    'google/gemini-flash-1.5',
+    'google/gemini-2.0-flash-001',
+    'meta-llama/llama-3.1-8b-instruct:free',
+    'mistralai/mistral-7b-instruct:free',
+  ];
+
+  let lastErr = null;
+  for(const model of MODELS){
+    try{
+      const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],temperature:0.7,max_tokens:4000})
+      });
+      if(!r.ok){
+        const errText=await r.text();
+        // Jika rate-limited (429) atau provider error, coba model berikutnya
+        let errJson={};try{errJson=JSON.parse(errText);}catch{}
+        const code=errJson?.error?.code||r.status;
+        if(code===429||r.status===429||(errText.includes('rate-limited')||errText.includes('rate_limit'))){
+          console.warn(`Model ${model} rate-limited, mencoba model berikutnya...`);
+          lastErr=new Error('OpenRouter error: '+errText);
+          continue;
+        }
+        throw new Error('OpenRouter error: '+errText);
+      }
+      const d=await r.json();
+      return d.choices?.[0]?.message?.content||'No response';
+    }catch(e){
+      if(e.message.includes('OpenRouter error')&&(e.message.includes('rate-limited')||e.message.includes('429'))){
+        lastErr=e;continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr||new Error('Semua model AI sedang sibuk, coba beberapa saat lagi.');
 }
 
 async function runAIAnalysis(){
