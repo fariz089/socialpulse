@@ -917,18 +917,24 @@ app.get('/api/checkpoints/:project_id/gap', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     
     if (!checkpoint) {
-      res.json({ last_date: null, today, gap_days: null, needs_scrape: true, is_first_scrape: true });
+      res.json({ last_date: null, today, gap_days: null, needs_scrape: true, is_first_scrape: true, already_scraped_today: false });
     } else {
       const lastDate = new Date(checkpoint.last_scraped_date);
       const todayDate = new Date(today);
       const gapDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      // FIX: always allow retry — let user decide. Dedup logic in /api/posts/bulk handles duplicates.
+      // Suggested range: when same-day retry, scan from last_date itself (not last_date+1) so we re-cover today.
+      const suggestedFrom = gapDays > 0
+        ? new Date(lastDate.getTime() + 86400000).toISOString().split('T')[0]
+        : checkpoint.last_scraped_date;
       res.json({
         last_date: checkpoint.last_scraped_date,
         today,
         gap_days: gapDays,
-        needs_scrape: gapDays > 0,
+        needs_scrape: true, // always true — user decides via UI
         is_first_scrape: false,
-        suggested_from: gapDays > 0 ? new Date(lastDate.getTime() + 86400000).toISOString().split('T')[0] : null
+        already_scraped_today: gapDays === 0,
+        suggested_from: suggestedFrom
       });
     }
   } catch (e) {
@@ -968,6 +974,87 @@ app.post('/api/apify-proxy', async (req, res) => {
     res.json(data);
   } catch (e) {
     console.error('[Apify Proxy] Exception:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== ANDROID SCRAPER FALLBACK =====
+// User configures Android scraper URL(s) in Settings (e.g. http://192.168.1.50:5005)
+// This proxy lets frontend call them through backend (avoid CORS, hide URLs from client)
+app.post('/api/android-scraper', async (req, res) => {
+  const { scraper_url, platform, keyword, max_results } = req.body;
+  
+  if (!scraper_url) {
+    return res.status(400).json({ error: 'scraper_url required' });
+  }
+  
+  try {
+    const fetch = (await import('node-fetch')).default;
+    const url = `${scraper_url.replace(/\/$/, '')}/scrape`;
+    
+    console.log(`[Android Scraper] Calling: ${url} for ${platform}/${keyword}`);
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2-minute timeout
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform, keyword, max_results: max_results || 30 }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Android Scraper] Error (${response.status}): ${errorText}`);
+      return res.status(response.status).json({ error: errorText, source: 'android' });
+    }
+    
+    const data = await response.json();
+    console.log(`[Android Scraper] Success: ${data?.posts?.length || 0} items`);
+    res.json(data);
+  } catch (e) {
+    console.error('[Android Scraper] Exception:', e.message);
+    res.status(503).json({ error: e.message, source: 'android' });
+  }
+});
+
+// Health-check the Android scraper(s)
+app.post('/api/android-scraper/health', async (req, res) => {
+  const { scraper_urls } = req.body; // array
+  if (!Array.isArray(scraper_urls)) {
+    return res.status(400).json({ error: 'scraper_urls array required' });
+  }
+  
+  const fetch = (await import('node-fetch')).default;
+  const results = await Promise.all(scraper_urls.map(async (url) => {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 5000);
+      const r = await fetch(`${url.replace(/\/$/, '')}/health`, { signal: controller.signal });
+      clearTimeout(t);
+      const data = await r.json().catch(() => ({}));
+      return { url, online: r.ok, ...data };
+    } catch (e) {
+      return { url, online: false, error: e.message };
+    }
+  }));
+  res.json(results);
+});
+
+// ===== CHECKPOINT MANAGEMENT =====
+// Reset a specific platform/keyword checkpoint (for force re-scrape)
+app.delete('/api/checkpoints/:project_id', async (req, res) => {
+  const { platform, keyword } = req.query;
+  try {
+    const filter = { project_id: req.params.project_id };
+    if (platform) filter.platform = platform;
+    if (keyword) filter.keyword = keyword;
+    
+    const result = await db.collection('scrape_checkpoints').deleteMany(filter);
+    res.json({ deleted: result.deletedCount });
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
