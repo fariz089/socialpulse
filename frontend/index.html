@@ -18,7 +18,7 @@
 --text:#eeeef5;--text-2:#9298a8;--text-3:#5c6178;
 --accent:#6366f1;--accent-2:#818cf8;--accent-dim:rgba(99,102,241,0.1);
 --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--pink:#ec4899;
---tiktok:#00f2ea;--twitter:#1da1f2;--instagram:#e1306c;--facebook:#1877f2;--youtube:#ff0000;--news:#f97316;
+--tiktok:#00f2ea;--twitter:#1da1f2;--instagram:#e1306c;--facebook:#1877f2;--youtube:#ff0000;--threads:#bfbfbf;--news:#f97316;
 --r:12px;--r-sm:8px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -58,6 +58,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .topbar-left .project-keywords{display:flex;gap:4px;flex-wrap:wrap;}
 .topbar-left .kw-tag{padding:2px 8px;background:var(--accent-dim);border:1px solid var(--border-active);border-radius:14px;font-size:10px;color:var(--accent-2);font-weight:600;}
 .topbar-right{display:flex;align-items:center;gap:6px;}
+
+/* ─── Fullscreen monitor mode (dipakai oleh Command Center launcher M1-M5) ─── */
+/* Hide sidebar + topbar, content jadi full width supaya kelihatan kayak monitor dedicated */
+body.monitor-fullscreen .sidebar { display:none !important; }
+body.monitor-fullscreen .topbar { display:none !important; }
+body.monitor-fullscreen .main { margin-left:0 !important; }
+body.monitor-fullscreen #login-screen { display:none !important; }
+body.monitor-fullscreen #content-area { padding:14px 20px !important; }
+/* Disable user dropdown + nav animations yg bisa ganggu auto-refresh */
+body.monitor-fullscreen .user-dropdown { display:none !important; }
 
 /* DATE RANGE BAR */
 .date-bar{display:flex;align-items:center;gap:6px;padding:10px 20px;background:var(--bg-card);border-bottom:1px solid var(--border);}
@@ -170,6 +180,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .plat-icon.instagram{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);}
 .plat-icon.facebook{background:var(--facebook);}
 .plat-icon.youtube{background:var(--youtube);}
+.plat-icon.threads{background:linear-gradient(135deg,#444,#000);}
 .plat-icon.news{background:var(--news);}
 .plat-info{flex:1;}
 .plat-name{font-size:10px;font-weight:600;}
@@ -360,6 +371,61 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .engage-card .ec-val{font-size:20px;font-weight:800;font-family:'JetBrains Mono',monospace;}
 .engage-card .ec-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;}
 .engage-card .ec-sub{font-size:9px;color:var(--text-3);}
+
+/* ===== ACCOUNT MANAGER (Fase 2) ===== */
+.acc-info-box{background:rgba(99,102,241,0.08);border-left:3px solid var(--accent);padding:10px 12px;margin:10px 0;border-radius:var(--r-sm);font-size:11px;color:var(--text-2);}
+.acc-info-box strong{color:var(--text);display:block;margin-bottom:4px;font-size:11px;}
+.acc-info-box ol{margin:6px 0 0 18px;padding:0;}
+.acc-info-box li{margin-bottom:3px;}
+.acc-info-box code{background:var(--bg-elevated);padding:1px 5px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent);}
+.acc-info-box a{color:var(--accent);}
+.acc-info-box .acc-warn{color:var(--orange);margin-top:6px;display:block;font-size:10px;}
+
+.acc-table{width:100%;border-collapse:collapse;font-size:11px;}
+.acc-table th,.acc-table td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;}
+.acc-table th{background:var(--bg-elevated);font-weight:600;font-size:10px;text-transform:uppercase;color:var(--text-2);letter-spacing:0.5px;}
+.acc-table td small{color:var(--text-3);font-size:9px;}
+.acc-table tr:hover td{background:rgba(99,102,241,0.04);}
+
+.acc-badge{padding:3px 8px;border-radius:10px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;display:inline-block;}
+.acc-badge-instagram{background:rgba(225,48,108,0.15);color:#e1306c;}
+.acc-badge-tiktok{background:rgba(255,255,255,0.1);color:#fff;border:1px solid #444;}
+.acc-badge-facebook{background:rgba(24,119,242,0.15);color:#4f8af2;}
+.acc-badge-youtube{background:rgba(255,0,0,0.15);color:#ff4c4c;}
+.acc-badge-twitter{background:rgba(29,161,242,0.15);color:#4ab3f4;}
+.acc-badge-threads{background:rgba(255,255,255,0.08);color:#d4d4d4;border:1px solid #555;}
+
+.acc-status{font-weight:600;font-size:10px;}
+.acc-status-active{color:var(--green);}
+.acc-status-banned{color:var(--red);}
+.acc-status-challenge{color:var(--orange);}
+.acc-status-expired{color:var(--text-3);}
+.acc-status-unknown{color:var(--text-3);}
+
+.acc-actions{display:flex;gap:4px;}
+.acc-actions .btn{padding:4px 8px;font-size:10px;}
+
+.acc-textarea{width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;resize:vertical;min-height:90px;}
+.acc-textarea:focus{outline:none;border-color:var(--accent);}
+
+/* ─── Fix: dropdown <select> & <option> readable di dark theme ─── */
+/* Tanpa color-scheme:dark, dropdown native ngikut OS theme — di Windows light
+   mode item yg ke-highlight jadi putih-di-putih (gak kebaca). */
+select{
+  color-scheme: dark;
+  background:var(--bg-2);
+  color:var(--text);
+}
+select option{
+  background:var(--bg-2);
+  color:var(--text);
+}
+select option:hover,
+select option:checked,
+select option:focus{
+  background:var(--accent) !important;
+  color:#fff !important;
+}
 </style>
 </head>
 <body>
@@ -433,7 +499,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div id="sidebar-projects"><div class="sidebar-item" style="color:var(--text-3);font-size:11px;"><i class="fas fa-plus"></i> Create first project</div></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-item" onclick="openModal('modal-settings')"><i class="fas fa-cog"></i> Settings</div>
+    <div class="sidebar-item" onclick="openCommandCenterModal()"><i class="fas fa-tv" style="color:var(--accent)"></i> Command Center</div>
+    <div class="sidebar-item" onclick="openAccountsModal()"><i class="fas fa-user-shield" style="color:var(--accent)"></i> Akun Scraper</div>
+    <div class="sidebar-item" onclick="openSettingsModal()"><i class="fas fa-cog"></i> Settings</div>
     <div class="sidebar-item" onclick="openModal('modal-new-project')"><i class="fas fa-plus-circle" style="color:var(--green)"></i> New Project</div>
   </div>
 </nav>
@@ -465,7 +533,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             <div style="font-size:11px;font-weight:600;" id="dropdown-username">Username</div>
             <div style="font-size:9px;color:var(--text-3);" id="dropdown-email">email@example.com</div>
           </div>
-          <div class="sidebar-item" onclick="openModal('modal-settings');toggleUserMenu();" style="margin:4px;border-radius:4px;"><i class="fas fa-cog"></i> Settings</div>
+          <div class="sidebar-item" onclick="openAccountsModal();toggleUserMenu();" style="margin:4px;border-radius:4px;"><i class="fas fa-user-shield"></i> Akun Scraper</div>
+          <div class="sidebar-item" onclick="openSettingsModal();toggleUserMenu();" style="margin:4px;border-radius:4px;"><i class="fas fa-cog"></i> Settings</div>
           <div class="sidebar-item" onclick="doLogout()" style="margin:4px;border-radius:4px;color:var(--red);"><i class="fas fa-sign-out-alt"></i> Logout</div>
         </div>
       </div>
@@ -547,7 +616,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <label class="plat-toggle active"><input type="checkbox" value="tiktok" checked/><i class="fab fa-tiktok" style="color:var(--tiktok)"></i> TikTok</label>
         <label class="plat-toggle active"><input type="checkbox" value="twitter" checked/><i class="fab fa-twitter" style="color:var(--twitter)"></i> Twitter</label>
         <label class="plat-toggle active"><input type="checkbox" value="instagram" checked/><i class="fab fa-instagram" style="color:var(--instagram)"></i> Instagram</label>
-        <label class="plat-toggle"><input type="checkbox" value="facebook"/><i class="fab fa-facebook" style="color:var(--facebook)"></i> Facebook</label>
+        <label class="plat-toggle active"><input type="checkbox" value="facebook" checked/><i class="fab fa-facebook" style="color:var(--facebook)"></i> Facebook</label>
+        <label class="plat-toggle"><input type="checkbox" value="threads"/><i class="fab fa-threads" style="color:var(--threads)"></i> Threads</label>
         <label class="plat-toggle"><input type="checkbox" value="youtube"/><i class="fab fa-youtube" style="color:var(--youtube)"></i> YouTube</label>
         <label class="plat-toggle active"><input type="checkbox" value="news" checked/><i class="fas fa-newspaper" style="color:var(--news)"></i> News</label>
       </div>
@@ -565,34 +635,279 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- MODAL: Settings -->
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal">
+  <div class="modal" style="max-width:780px;max-height:90vh;overflow-y:auto;">
     <h3><i class="fas fa-cog" style="color:var(--accent)"></i> Settings</h3>
-    <div class="form-group">
-      <label>Apify API Token</label>
-      <div style="display:flex;gap:6px;"><input type="password" id="s-token" placeholder="apify_api_xxxxxxxx"/><button class="btn btn-primary btn-sm" onclick="saveToken()"><i class="fas fa-save"></i></button></div>
-      <div class="hint">Token disimpan di database. Tidak hilang meski browser di-refresh!</div>
-      <div id="token-ok" style="display:none;margin-top:4px;font-size:10px;color:var(--green);"><i class="fas fa-check-circle"></i> Token tersimpan</div>
+    <p style="font-size:12px;color:var(--text-3);margin-top:-6px;margin-bottom:14px;">
+      Semua konfigurasi runtime di sini. Perubahan langsung kepakai tanpa restart container.
+    </p>
+
+    <!-- AI AGENT -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fas fa-robot"></i> AI Agent (JARVIS)</h4>
+      <div class="form-group">
+        <label>OpenRouter API Key <span id="s-or-status" style="font-size:10px;color:var(--text-3);"></span></label>
+        <div style="display:flex;gap:6px;">
+          <input type="password" id="s-openrouter-key" placeholder="sk-or-v1-xxxxxxxx" style="flex:1;"/>
+          <button class="btn btn-outline btn-sm" onclick="testOpenRouter()" type="button" title="Test API key + model"><i class="fas fa-vial"></i></button>
+        </div>
+        <div class="hint">Daftar gratis di openrouter.ai. Minimal top up $5 untuk pakai Gemini Flash.</div>
+      </div>
+      <div class="form-group">
+        <label>Model</label>
+        <select id="s-openrouter-model">
+          <option value="google/gemini-2.5-flash">Gemini 2.5 Flash (cepat, murah)</option>
+          <option value="google/gemini-2.5-pro">Gemini 2.5 Pro (lebih akurat)</option>
+          <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (best reasoning)</option>
+          <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku (cepat)</option>
+          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+          <option value="openai/gpt-4o">GPT-4o</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group">
-      <label>API Base URL</label>
-      <input type="text" id="s-api" value="/api"/>
-      <div class="hint">Default /api. Tanpa Docker: http://localhost:3001/api</div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- SCHEDULER -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fas fa-clock"></i> Scheduler 24/7</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Status</label>
+          <select id="s-scheduler-enabled">
+            <option value="true">✓ Aktif</option>
+            <option value="false">✗ Mati</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Interval (menit)</label>
+          <input type="number" id="s-scheduler-interval" min="1" placeholder="60"/>
+          <div id="s-interval-warn" style="font-size:10px;color:#f59e0b;margin-top:4px;display:none;">
+            ⚠ &lt; 5 menit beresiko rate-limit & cycle overlap
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Max post/platform</label>
+          <input type="number" id="s-scheduler-max" min="5" max="200" placeholder="30"/>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>OpenRouter API Token (untuk AI Analysis)</label>
-      <div style="display:flex;gap:6px;"><input type="password" id="s-or-token" placeholder="sk-or-v1-xxxxxxxx"/><button class="btn btn-primary btn-sm" onclick="saveORToken()"><i class="fas fa-save"></i></button></div>
-      <div class="hint">Untuk generate Executive Summary, SWOT, Rekomendasi otomatis. Daftar di openrouter.ai</div>
-      <div id="or-token-ok" style="display:none;margin-top:4px;font-size:10px;color:var(--green);"><i class="fas fa-check-circle"></i> OpenRouter token tersimpan</div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- ALERT THRESHOLDS -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fas fa-exclamation-triangle"></i> Alert Thresholds</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label>Negative spike %</label>
+          <input type="number" id="s-alert-neg" min="0" max="100" step="0.1" placeholder="30"/>
+          <div class="hint">Trigger kalau &gt; nilai ini</div>
+        </div>
+        <div class="form-group">
+          <label>Volume multiplier</label>
+          <input type="number" id="s-alert-vol" min="1" step="0.1" placeholder="3"/>
+          <div class="hint">Spike kalau &gt; X× rata-rata</div>
+        </div>
+        <div class="form-group">
+          <label>Cooldown (menit)</label>
+          <input type="number" id="s-alert-cd" min="1" placeholder="120"/>
+          <div class="hint">Min antar alert sejenis</div>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Android Scraper URLs (Instagram fallback)</label>
-      <div style="display:flex;gap:6px;"><input type="text" id="s-android-urls" placeholder="http://192.168.1.50:5005,http://192.168.1.51:5005"/><button class="btn btn-primary btn-sm" onclick="saveAndroidUrls()"><i class="fas fa-save"></i></button></div>
-      <div class="hint">Comma-separated list URL service Android scraper. Akan dipakai sebagai fallback ke-2 saat Apify gagal.</div>
-      <div id="android-urls-ok" style="display:none;margin-top:4px;font-size:10px;color:var(--green);"><i class="fas fa-check-circle"></i> URLs tersimpan</div>
-      <button class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="testAndroidUrls()"><i class="fas fa-heartbeat"></i> Test Connection</button>
-      <div id="android-health" style="margin-top:6px;font-size:10px;"></div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- TELEGRAM -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fab fa-telegram"></i> Telegram <span id="s-tg-status" style="font-size:10px;color:var(--text-3);"></span></h4>
+      <div class="form-group">
+        <label>Bot Token</label>
+        <input type="password" id="s-telegram-token" placeholder="1234567890:ABC..."/>
+        <div class="hint">Chat @BotFather → /newbot → copy token</div>
+      </div>
+      <div class="form-group">
+        <label>Chat ID</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="s-telegram-chat" placeholder="123456789 atau -100123456789" style="flex:1;"/>
+          <button class="btn btn-outline btn-sm" onclick="testTelegram()" type="button" title="Test kirim pesan"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="hint">Setelah /start bot, buka api.telegram.org/bot&lt;TOKEN&gt;/getUpdates → cari "id"</div>
+      </div>
     </div>
-    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-settings')">Tutup</button></div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- DISCORD -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fab fa-discord"></i> Discord <span id="s-dc-status" style="font-size:10px;color:var(--text-3);"></span></h4>
+      <div class="form-group">
+        <label>Webhook URL</label>
+        <div style="display:flex;gap:6px;">
+          <input type="password" id="s-discord-webhook" placeholder="https://discord.com/api/webhooks/..." style="flex:1;"/>
+          <button class="btn btn-outline btn-sm" onclick="testDiscord()" type="button" title="Test kirim ke Discord"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="hint">Server settings → Integrations → Webhooks → New Webhook → Copy URL</div>
+      </div>
+    </div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- SCRAPER OVERRIDE -->
+    <div class="settings-section">
+      <h4 style="margin:8px 0 12px 0;font-size:13px;color:var(--accent);"><i class="fas fa-server"></i> Scraper</h4>
+      <div class="form-group">
+        <label>Override URL (opsional)</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="s-android-urls" placeholder="kosongkan untuk default Docker" style="flex:1;"/>
+          <button class="btn btn-outline btn-sm" onclick="testAndroidUrls()" type="button" title="Health check"><i class="fas fa-heartbeat"></i></button>
+        </div>
+        <div class="hint">Default kosong = pakai pc-scraper Docker internal. Isi kalau scraper di host/HP lain (bisa multiple, comma-separated).</div>
+        <div id="android-health" style="margin-top:6px;font-size:10px;"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="position:sticky;bottom:0;background:var(--bg-2);padding-top:10px;margin-top:10px;border-top:1px solid var(--border);">
+      <button class="btn btn-outline" onclick="closeModal('modal-settings')">Tutup</button>
+      <button class="btn btn-primary" onclick="saveAllSettings()"><i class="fas fa-save"></i> Simpan Semua</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Akun Scraper (Fase 2) -->
+<div class="modal-overlay" id="modal-accounts">
+  <div class="modal" style="max-width:780px;">
+    <h3><i class="fas fa-user-shield" style="color:var(--accent)"></i> Manajemen Akun Scraper</h3>
+    <p style="font-size:11px;color:var(--text-3);margin-top:-6px;margin-bottom:14px;">Login &amp; cookie per platform — ga perlu lagi curl manual.</p>
+
+    <!-- Pilih platform + target -->
+    <div class="acc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Platform</label>
+        <select id="acc-platform">
+          <option value="instagram">Instagram (cookie)</option>
+          <option value="tiktok">TikTok (cookie via PC)</option>
+          <option value="facebook">Facebook (cookie)</option>
+          <option value="youtube">YouTube (cookies.txt / anonymous)</option>
+          <option value="twitter">Twitter / X (cookie)</option>
+          <option value="threads">Threads (cookie — share auth IG)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;" id="acc-target-group">
+        <label>Target Scraper <span style="color:var(--text-3);font-weight:400;">(opsional)</span></label>
+        <select id="acc-target">
+          <option value="">— HP pertama dari pool —</option>
+        </select>
+        <div class="hint" style="margin-top:4px;">Pilih HP spesifik kalau punya beberapa device. TikTok selalu ke PC service.</div>
+      </div>
+    </div>
+
+    <!-- Form per platform (di-render dinamis) -->
+    <div id="acc-form-container" style="margin-top:10px;"></div>
+
+    <hr style="margin:18px 0;border:none;border-top:1px solid var(--border);"/>
+
+    <!-- Tabel akun aktif -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h4 style="margin:0;font-size:13px;"><i class="fas fa-list"></i> Akun Terdaftar</h4>
+      <div style="display:flex;gap:6px;">
+        <span id="acc-error-badge" style="display:none;font-size:9px;padding:3px 8px;border-radius:8px;background:var(--red);color:#fff;cursor:help;" title=""></span>
+        <button class="btn btn-outline btn-sm" onclick="loadAccountsList()"><i class="fas fa-sync"></i> Refresh</button>
+      </div>
+    </div>
+
+    <div id="acc-table-wrap">
+      <div id="acc-empty" style="text-align:center;padding:24px;color:var(--text-3);font-size:11px;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size:18px;display:block;margin-bottom:6px;"></i>
+        Memuat daftar akun...
+      </div>
+      <table class="acc-table" id="acc-table" style="display:none;">
+        <thead>
+          <tr>
+            <th style="width:90px;">Platform</th>
+            <th>Username</th>
+            <th style="width:100px;">Status</th>
+            <th style="width:140px;">Source</th>
+            <th style="width:130px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="acc-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modal-accounts')">Tutup</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Command Center Launcher (Fase 3-5) -->
+<div class="modal-overlay" id="modal-command-center">
+  <div class="modal" style="max-width:680px;">
+    <h3><i class="fas fa-tv" style="color:var(--accent)"></i> Command Center Launcher</h3>
+    <p style="opacity:.7;font-size:13px;margin-bottom:16px;">
+      Buka 6-monitor view untuk monitoring real-time. AI Agent bisa di-trigger dari Monitor 6 (AI Chat).
+    </p>
+
+    <div class="form-group">
+      <label>Project</label>
+      <select id="cc-project-input" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-2);color:var(--text);">
+        <option value="" style="background:var(--bg-2);color:var(--text);">— semua data, tanpa filter project —</option>
+      </select>
+      <div class="hint" style="margin-top:6px;font-size:11px;opacity:.6;">Pilih project untuk auto-load data project itu di semua 6 monitor.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Keyword <span style="opacity:.5;font-weight:400;">(opsional)</span></label>
+      <input type="text" id="cc-keyword-input" placeholder="kosongkan = pakai semua keyword di project" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-2);color:var(--text);">
+      <div class="hint" style="margin-top:6px;font-size:11px;opacity:.6;">Filter tambahan untuk fokus ke 1 keyword tertentu dalam project. Kalau project sudah dipilih, biasanya field ini bisa dikosongkan.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;">
+      <button class="btn btn-outline" onclick="openMonitor(1)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-tachometer-alt" style="font-size:20px;margin-bottom:6px;color:var(--accent);"></i><br>
+        <span style="font-size:11px;opacity:.7;">M1</span><br>
+        <strong style="font-size:13px;">Dashboard</strong>
+      </button>
+      <button class="btn btn-outline" onclick="openMonitor(2)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-chart-pie" style="font-size:20px;margin-bottom:6px;color:#10b981;"></i><br>
+        <span style="font-size:11px;opacity:.7;">M2</span><br>
+        <strong style="font-size:13px;">Sentiment</strong>
+      </button>
+      <button class="btn btn-outline" onclick="openMonitor(3)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-stream" style="font-size:20px;margin-bottom:6px;color:#3b82f6;"></i><br>
+        <span style="font-size:11px;opacity:.7;">M3</span><br>
+        <strong style="font-size:13px;">Mentions</strong>
+      </button>
+      <button class="btn btn-outline" onclick="openMonitor(4)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-project-diagram" style="font-size:20px;margin-bottom:6px;color:#a78bfa;"></i><br>
+        <span style="font-size:11px;opacity:.7;">M4</span><br>
+        <strong style="font-size:13px;">SNA Graph</strong>
+      </button>
+      <button class="btn btn-outline" onclick="openMonitor(5)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-map-marker-alt" style="font-size:20px;margin-bottom:6px;color:#ef4444;"></i><br>
+        <span style="font-size:11px;opacity:.7;">M5</span><br>
+        <strong style="font-size:13px;">Locations</strong>
+      </button>
+      <button class="btn btn-outline" onclick="openMonitor(6)" style="padding:14px 8px;text-align:center;flex-direction:column;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-comments" style="font-size:20px;margin-bottom:6px;color:#f97316;"></i><br>
+        <span style="font-size:11px;opacity:.7;">M6</span><br>
+        <strong style="font-size:13px;">AI Chat</strong>
+      </button>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:var(--bg-2);border-radius:8px;border:1px dashed var(--border);">
+      <div style="font-weight:600;margin-bottom:6px;font-size:13px;">💡 Multi-monitor launcher (Windows)</div>
+      <p style="font-size:12px;opacity:.7;margin:0;">
+        Untuk auto-open 6 jendela di posisi monitor yg benar (2×3 layout), pakai
+        <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:3px;">slaytics-command-center.bat</code>
+        di folder <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:3px;">launchers/</code> pada zip ini.
+        Edit BASE_URL dulu supaya match dengan host/IP server kamu.
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="openAllMonitors()"><i class="fas fa-external-link-alt"></i> Buka semua (6 tab)</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-command-center')">Tutup</button>
+    </div>
   </div>
 </div>
 
@@ -708,6 +1023,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <label class="plat-toggle"><input type="checkbox" value="twitter"/><i class="fab fa-twitter" style="color:var(--twitter)"></i> Twitter</label>
         <label class="plat-toggle"><input type="checkbox" value="instagram"/><i class="fab fa-instagram" style="color:var(--instagram)"></i> Instagram</label>
         <label class="plat-toggle"><input type="checkbox" value="facebook"/><i class="fab fa-facebook" style="color:var(--facebook)"></i> Facebook</label>
+        <label class="plat-toggle"><input type="checkbox" value="threads"/><i class="fab fa-threads" style="color:var(--threads)"></i> Threads</label>
         <label class="plat-toggle"><input type="checkbox" value="youtube"/><i class="fab fa-youtube" style="color:var(--youtube)"></i> YouTube</label>
         <label class="plat-toggle"><input type="checkbox" value="news"/><i class="fas fa-newspaper" style="color:var(--news)"></i> News</label>
       </div>
@@ -736,6 +1052,24 @@ let dateFrom = '', dateTo = '';
 let lastStats = null;
 let currentUser = null;
 let authToken = null;
+
+// ===== Avatar helper =====
+// Instagram CDN (instagram.fcgk*.fna.fbcdn.net, scontent-*.cdninstagram.com)
+// block hot-link cross-origin: browser kirim Sec-Fetch-Site:cross-site dan
+// IG balik 403 walau referrerpolicy=no-referrer. Solusi: route via backend
+// proxy yang forward dengan Referer instagram.com.
+//
+// Facebook avatar (scontent-*.xx.fbcdn.net path /v/t39.../) kebanyakan masih
+// hot-linkable, tapi sebagian baru juga kena. Aman-nya: proxy SEMUA fbcdn/
+// cdninstagram URL. URL non-fbcdn (contoh ui-avatars.com) di-passthrough.
+function proxiedAvatar(url) {
+  if (!url || typeof url !== 'string') return url;
+  // Hanya proxy host yang kita yakin block hot-link
+  if (/(fbcdn\.net|cdninstagram\.com)/i.test(url)) {
+    return `${API}/img-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
 
 // ===== AUTH FUNCTIONS =====
 function showLogin() {
@@ -873,6 +1207,28 @@ function doLogout() {
 }
 
 function checkAuth() {
+  // Untuk monitor mode (window baru dibuka dari Command Center launcher),
+  // token dipass lewat URL ?token=xxx supaya gak perlu login ulang.
+  // Sekali ke-load, simpan ke localStorage supaya WebSocket dan future request bisa pakai.
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
+  if (urlToken) {
+    localStorage.setItem('slaytics_token', urlToken);
+    authToken = urlToken;
+    // Fetch user profile pakai token
+    fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${urlToken}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(user => {
+        if (user) {
+          currentUser = user;
+          localStorage.setItem('slaytics_user', JSON.stringify(user));
+          onLoginSuccess();
+        }
+      })
+      .catch(() => {/* fallback ke savedToken di bawah */});
+    return true;
+  }
+
   const savedToken = localStorage.getItem('slaytics_token');
   const savedUser = localStorage.getItem('slaytics_user');
   
@@ -1083,7 +1439,7 @@ function showCityPopup(city,count,coords){
 
 const POS_W=["bagus","keren","mantap","mantep","suka","love","amazing","great","good","awesome","best","recommended","rekomen","worth","wajib","top","jos","gokil","nyaman","mewah","enak","puas","senang","happy","excellent","perfect","thanks","terima kasih","terbaik","favorit","super","sukses","kece","premium"];
 const NEG_W=["jelek","buruk","kecewa","disappointed","bad","worst","terrible","awful","poor","hate","benci","marah","angry","gagal","fail","scam","penipuan","bohong","bodong","lambat","lelet","rusak","error","komplain","telat","delay","kotor","negatif"];
-const P_CFG={tiktok:{icon:'fab fa-tiktok',color:'#00f2ea',grad:'linear-gradient(135deg,#00f2ea,#ff0050)'},twitter:{icon:'fab fa-twitter',color:'#1da1f2',grad:'#1da1f2'},instagram:{icon:'fab fa-instagram',color:'#e1306c',grad:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)'},facebook:{icon:'fab fa-facebook',color:'#1877f2',grad:'#1877f2'},youtube:{icon:'fab fa-youtube',color:'#ff0000',grad:'#ff0000'},news:{icon:'fas fa-newspaper',color:'#f97316',grad:'#f97316'}};
+const P_CFG={tiktok:{icon:'fab fa-tiktok',color:'#00f2ea',grad:'linear-gradient(135deg,#00f2ea,#ff0050)'},twitter:{icon:'fab fa-twitter',color:'#1da1f2',grad:'#1da1f2'},instagram:{icon:'fab fa-instagram',color:'#e1306c',grad:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)'},facebook:{icon:'fab fa-facebook',color:'#1877f2',grad:'#1877f2'},youtube:{icon:'fab fa-youtube',color:'#ff0000',grad:'#ff0000'},threads:{icon:'fab fa-threads',color:'#bfbfbf',grad:'linear-gradient(135deg,#444,#000)'},news:{icon:'fas fa-newspaper',color:'#f97316',grad:'#f97316'}};
 
 // ===== HELPERS =====
 const fmt=n=>{if(n==null||isNaN(n))return'0';n=Number(n);if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toString();};
@@ -1130,59 +1486,262 @@ function openDrilldown(title,icon,filterFn){
   document.getElementById('drilldown-content').innerHTML=filtered.length?filtered.map(p=>{
     const c=P_CFG[p.platform]||P_CFG.tiktok;
     const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-    return `<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:${c.grad}"><img src="${p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36`}" onerror="this.style.display='none'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?`<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• ${postDate}</span>`:''}</div></div></div><div class="feed-meta"><span style="color:${c.color}"><i class="${c.icon}"></i></span> <span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${(p.content||'').substring(0,200)}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;
+    return `<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar" style="background:${c.grad}"><img referrerpolicy="no-referrer" src="${proxiedAvatar(p.avatar)||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36`}" onerror="this.style.display='none'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?`<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• ${postDate}</span>`:''}</div></div></div><div class="feed-meta"><span style="color:${c.color}"><i class="${c.icon}"></i></span> <span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${(p.content||'').substring(0,200)}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;
   }).join(''):'<div class="empty"><p>No posts found</p></div>';
   document.getElementById('drilldown-overlay').classList.add('active');
 }
 function closeDrilldown(){document.getElementById('drilldown-overlay').classList.remove('active');}
 
-// ===== OPENROUTER AI =====
-async function saveORToken(){
-  const el=document.getElementById('s-or-token');if(!el)return;
-  const v=el.value.trim();if(!v){toast('error','Error','Masukkan OpenRouter token');return;}
-  try{
-    await fetch(`${API}/settings/openrouter_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:v})});
-    const okEl=document.getElementById('or-token-ok');if(okEl)okEl.style.display='block';
-    toast('success','Saved!','OpenRouter token tersimpan');
-  }catch(e){localStorage.setItem('or_token',v);toast('info','Saved locally','');}
-}
-async function getORToken(){
-  const el=document.getElementById('s-or-token');
-  const t=el?el.value.trim():'';
-  if(t)return t;
-  try{const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();if(d.value){if(el)el.value=d.value;return d.value;}}catch{}
-  return localStorage.getItem('or_token')||'';
-}
-async function loadORToken(){
-  try{
-    const r=await fetch(`${API}/settings/openrouter_token`);const d=await r.json();
-    if(d.value){
-      const el=document.getElementById('s-or-token');if(el)el.value=d.value;
-      const okEl=document.getElementById('or-token-ok');if(okEl)okEl.style.display='block';
-    }
-  }catch{}
+// ===== UNIFIED SETTINGS (DB-backed, hot-reload) =====
+// ===== UNIFIED SETTINGS (DB-backed, hot-reload) =====
+// Open Settings modal — load data DULU sebelum tampilkan, supaya gak flicker
+// "kosong → terisi". Kalau loading lambat, ada placeholder.
+async function openSettingsModal() {
+  // Show modal immediately tapi dengan placeholder
+  openModal('modal-settings');
+  // Reset semua field input ke kosong dulu
+  ['s-openrouter-key','s-telegram-token','s-discord-webhook'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Set status text ke "loading..." supaya user tau lagi fetch
+  ['s-or-status','s-tg-status','s-dc-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '(loading…)';
+  });
+  // Lalu fetch dan populate
+  await loadAllSettings();
 }
 
-// ===== Android Scraper Settings =====
-async function saveAndroidUrls(){
-  const el=document.getElementById('s-android-urls');if(!el)return;
-  const v=el.value.trim();
-  try{
-    await fetch(`${API}/settings/android_scraper_urls`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:v})});
-    const okEl=document.getElementById('android-urls-ok');if(okEl)okEl.style.display='block';
-    toast('success','Saved!', v ? `${v.split(',').length} URL(s) tersimpan` : 'Cleared');
-  }catch(e){toast('error','Save failed', e.message);}
+async function loadAllSettings(showHint = false) {
+  try {
+    const url = showHint ? `${API}/settings/all?show_hint=1` : `${API}/settings/all`;
+    const r = await fetch(url, {
+      headers: authHeaders(),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status} — token mungkin expired, coba logout-login lagi`);
+    const d = await r.json();
+    // AI
+    const orModel = document.getElementById('s-openrouter-model');
+    if (orModel && d.openrouter_model) orModel.value = d.openrouter_model;
+    const orStatus = document.getElementById('s-or-status');
+    if (orStatus) {
+      if (d.openrouter_api_key_set) {
+        orStatus.innerHTML = d.openrouter_api_key_preview
+          ? `(✓ ${d.openrouter_api_key_preview}) <a href="#" onclick="event.preventDefault();loadAllSettings(false);" style="color:var(--text-3);font-size:9px;">[hide]</a>`
+          : `(✓ configured) <a href="#" onclick="event.preventDefault();loadAllSettings(true);" style="color:var(--text-3);font-size:9px;">[show hint]</a>`;
+      } else {
+        orStatus.innerHTML = '(belum diset)';
+      }
+    }
+    // Scheduler
+    const sEn = document.getElementById('s-scheduler-enabled');
+    if (sEn) sEn.value = d.scheduler_enabled ? 'true' : 'false';
+    const sInt = document.getElementById('s-scheduler-interval');
+    if (sInt) sInt.value = d.scheduler_interval_minutes;
+    const sMax = document.getElementById('s-scheduler-max');
+    if (sMax) sMax.value = d.scheduler_max_results;
+    // Alerts
+    const aN = document.getElementById('s-alert-neg');
+    if (aN) aN.value = d.alert_negative_threshold;
+    const aV = document.getElementById('s-alert-vol');
+    if (aV) aV.value = d.alert_volume_multiplier;
+    const aC = document.getElementById('s-alert-cd');
+    if (aC) aC.value = d.alert_cooldown_minutes;
+    // Telegram
+    const tgChat = document.getElementById('s-telegram-chat');
+    if (tgChat) tgChat.value = d.telegram_chat_id || '';
+    const tgStatus = document.getElementById('s-tg-status');
+    if (tgStatus) {
+      if (d.telegram_bot_token_set) {
+        tgStatus.innerHTML = d.telegram_bot_token_preview
+          ? `(✓ ${d.telegram_bot_token_preview}) <a href="#" onclick="event.preventDefault();loadAllSettings(false);" style="color:var(--text-3);font-size:9px;">[hide]</a>`
+          : `(✓ configured) <a href="#" onclick="event.preventDefault();loadAllSettings(true);" style="color:var(--text-3);font-size:9px;">[show hint]</a>`;
+      } else {
+        tgStatus.innerHTML = '(belum diset)';
+      }
+    }
+    // Discord
+    const dcStatus = document.getElementById('s-dc-status');
+    if (dcStatus) {
+      if (d.discord_webhook_url_set) {
+        dcStatus.innerHTML = d.discord_webhook_url_preview
+          ? `(✓ ${d.discord_webhook_url_preview}) <a href="#" onclick="event.preventDefault();loadAllSettings(false);" style="color:var(--text-3);font-size:9px;">[hide]</a>`
+          : `(✓ configured) <a href="#" onclick="event.preventDefault();loadAllSettings(true);" style="color:var(--text-3);font-size:9px;">[show hint]</a>`;
+      } else {
+        dcStatus.innerHTML = '(belum diset)';
+      }
+    }
+    // Scraper override
+    const sUrls = document.getElementById('s-android-urls');
+    if (sUrls) sUrls.value = d.pc_scraper_url || '';
+  } catch (e) {
+    console.error('[loadAllSettings]', e);
+    toast('error', 'Load settings failed', e.message);
+  }
 }
 
-async function loadAndroidUrls(){
-  try{
-    const r=await fetch(`${API}/settings/android_scraper_urls`);const d=await r.json();
-    if(d.value){
-      const el=document.getElementById('s-android-urls');if(el)el.value=d.value;
-      const okEl=document.getElementById('android-urls-ok');if(okEl)okEl.style.display='block';
+async function saveAllSettings() {
+  const payload = {};
+  // Hanya kirim field yang user isi (gak override existing dengan kosong)
+  const orKey = document.getElementById('s-openrouter-key')?.value.trim();
+  if (orKey) payload.openrouter_api_key = orKey;
+  const orModel = document.getElementById('s-openrouter-model')?.value;
+  if (orModel) payload.openrouter_model = orModel;
+
+  const sEn = document.getElementById('s-scheduler-enabled')?.value;
+  if (sEn) payload.scheduler_enabled = sEn === 'true';
+  const sInt = document.getElementById('s-scheduler-interval')?.value;
+  if (sInt) payload.scheduler_interval_minutes = parseInt(sInt, 10);
+  const sMax = document.getElementById('s-scheduler-max')?.value;
+  if (sMax) payload.scheduler_max_results = parseInt(sMax, 10);
+
+  const aN = document.getElementById('s-alert-neg')?.value;
+  if (aN !== '') payload.alert_negative_threshold = parseFloat(aN);
+  const aV = document.getElementById('s-alert-vol')?.value;
+  if (aV !== '') payload.alert_volume_multiplier = parseFloat(aV);
+  const aC = document.getElementById('s-alert-cd')?.value;
+  if (aC !== '') payload.alert_cooldown_minutes = parseInt(aC, 10);
+
+  const tgToken = document.getElementById('s-telegram-token')?.value.trim();
+  if (tgToken) payload.telegram_bot_token = tgToken;
+  const tgChat = document.getElementById('s-telegram-chat')?.value.trim();
+  if (tgChat) payload.telegram_chat_id = tgChat;
+
+  const dcUrl = document.getElementById('s-discord-webhook')?.value.trim();
+  if (dcUrl) payload.discord_webhook_url = dcUrl;
+
+  const sUrls = document.getElementById('s-android-urls')?.value.trim();
+  // Untuk URL override, kirim apa adanya (termasuk kosong) — supaya bisa di-clear
+  payload.pc_scraper_url = sUrls;
+
+  if (Object.keys(payload).length === 0) {
+    toast('info', 'Tidak ada perubahan', '');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API}/settings/all`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(payload),
+    });
+    if (r.status === 401 || r.status === 403) {
+      // Token expired/invalid — auto-logout supaya user gak bingung
+      toast('error', 'Session Expired', 'Token sudah tidak valid. Silakan login ulang.');
+      setTimeout(() => doLogout(), 1500);
+      return;
     }
-  }catch{}
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${r.status}`);
+    }
+    toast('success', 'Saved!', `${Object.keys(payload).length} setting tersimpan`);
+    // Clear password fields supaya gak terlihat lagi
+    document.getElementById('s-openrouter-key').value = '';
+    document.getElementById('s-telegram-token').value = '';
+    document.getElementById('s-discord-webhook').value = '';
+    // Reload status preview
+    setTimeout(loadAllSettings, 500);
+  } catch (e) {
+    toast('error', 'Save failed', e.message);
+  }
 }
+
+async function testTelegram() {
+  const token = document.getElementById('s-telegram-token')?.value.trim();
+  const chatId = document.getElementById('s-telegram-chat')?.value.trim();
+  toast('info', 'Testing...', 'Kirim test ke Telegram');
+  try {
+    const r = await fetch(`${API}/settings/test/telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ token: token || undefined, chat_id: chatId || undefined }),
+    });
+    if (r.status === 401 || r.status === 403) {
+      toast('error', 'Session Expired', 'Token tidak valid. Silakan login ulang.');
+      setTimeout(() => doLogout(), 1500);
+      return;
+    }
+    const d = await r.json();
+    if (d.ok) toast('success', 'Telegram OK', d.message);
+    else toast('error', 'Telegram failed', d.error || 'Unknown error');
+  } catch (e) { toast('error', 'Test failed', e.message); }
+}
+
+async function testDiscord() {
+  const url = document.getElementById('s-discord-webhook')?.value.trim();
+  toast('info', 'Testing...', 'Kirim test ke Discord');
+  try {
+    const r = await fetch(`${API}/settings/test/discord`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ webhook: url || undefined }),
+    });
+    if (r.status === 401 || r.status === 403) {
+      toast('error', 'Session Expired', 'Token tidak valid. Silakan login ulang.');
+      setTimeout(() => doLogout(), 1500);
+      return;
+    }
+    const d = await r.json();
+    if (d.ok) toast('success', 'Discord OK', d.message);
+    else toast('error', 'Discord failed', d.error || 'Unknown error');
+  } catch (e) { toast('error', 'Test failed', e.message); }
+}
+
+async function testOpenRouter() {
+  const apiKey = document.getElementById('s-openrouter-key')?.value.trim();
+  const model = document.getElementById('s-openrouter-model')?.value;
+  toast('info', 'Testing...', `Ping ${model}`);
+  try {
+    const r = await fetch(`${API}/settings/test/openrouter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ api_key: apiKey || undefined, model }),
+    });
+    if (r.status === 401 || r.status === 403) {
+      toast('error', 'Session Expired', 'Token tidak valid. Silakan login ulang.');
+      setTimeout(() => doLogout(), 1500);
+      return;
+    }
+    const d = await r.json();
+    if (d.ok) toast('success', 'OpenRouter OK', d.message);
+    else toast('error', 'OpenRouter failed', d.error || 'Unknown');
+  } catch (e) { toast('error', 'Test failed', e.message); }
+}
+
+// Show warning kalau interval < 5
+document.addEventListener('DOMContentLoaded', () => {
+  const sInt = document.getElementById('s-scheduler-interval');
+  if (sInt) {
+    sInt.addEventListener('input', () => {
+      const w = document.getElementById('s-interval-warn');
+      if (!w) return;
+      const v = parseInt(sInt.value, 10);
+      w.style.display = (v && v < 5) ? 'block' : 'none';
+    });
+  }
+});
+
+// Boolean-style helper: cek apakah OpenRouter key sudah di-set di server.
+// Existing code (PDF generator dll) panggil getORToken() lalu test truthy
+// untuk gate "AI feature available?". Return marker string kalau set,
+// empty string kalau belum. Marker ini TIDAK PERNAH dipakai sebagai
+// Bearer token — actual auth dilakukan di backend /api/ai/analysis.
+async function getORToken() {
+  try {
+    const r = await fetch(`${API}/settings/all`, { headers: authHeaders() });
+    if (!r.ok) return '';
+    const d = await r.json();
+    return d.openrouter_api_key_set ? '__server_managed__' : '';
+  } catch { return ''; }
+}
+
+// Stub deprecated functions (jaga jangan break existing onClick)
+async function saveORToken() { return saveAllSettings(); }
+async function loadORToken() { return loadAllSettings(); }
+async function saveAndroidUrls() { return saveAllSettings(); }
+async function loadAndroidUrls() { return loadAllSettings(); }
 
 async function testAndroidUrls(){
   const el=document.getElementById('s-android-urls');
@@ -1193,16 +1752,27 @@ async function testAndroidUrls(){
   out.innerHTML='<i class="fas fa-spinner fa-spin"></i> Checking...';
   
   try{
-    const r=await fetch(`${API}/android-scraper/health`,{
+    const r=await fetch(`${API}/scrapers/health`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({scraper_urls:urls})
     });
-    const results=await r.json();
+    const data=await r.json();
+    const results = Array.isArray(data) ? data : (data.scrapers || []);
     out.innerHTML=results.map(res=>{
       if(res.online){
-        const acct=res.accounts_active!==undefined ? ` — ${res.accounts_active} active / ${res.accounts_total} total` : '';
-        return `<div style="color:var(--green)"><i class="fas fa-check-circle"></i> ${res.url}${acct}</div>`;
+        // v2 scraper kasih nested per-platform; v1 lama kasih flat
+        let summary = '';
+        if(res.platforms){
+          // v2 format: tampilkan total active per platform
+          summary = ' — ' + Object.entries(res.platforms).map(([p,v])=>{
+            if(typeof v.active === 'number') return `${p}:${v.active}`;
+            return `${p}:${v.active}`;
+          }).join(', ');
+        }else if(res.accounts_active!==undefined){
+          summary = ` — ${res.accounts_active} active / ${res.accounts_total} total`;
+        }
+        return `<div style="color:var(--green)"><i class="fas fa-check-circle"></i> ${res.url}${summary}</div>`;
       }else{
         return `<div style="color:var(--red)"><i class="fas fa-times-circle"></i> ${res.url} — ${res.error||'offline'}</div>`;
       }
@@ -1212,49 +1782,44 @@ async function testAndroidUrls(){
   }
 }
 
+// Panggil OpenRouter via backend proxy /api/ai/analysis.
+// Backend yang authenticate ke OpenRouter pakai server-side API key
+// (config.get('openrouter_api_key') di backend/agent.js / config.js).
+// Frontend cukup kirim systemPrompt + userPrompt; fallback model rotation
+// dilakukan di backend juga, jadi sini gak perlu loop model.
+//
+// Sebelumnya frontend coba fetch openrouter.ai langsung dengan literal string
+// '__server_managed__' sebagai Bearer token — itu cuma flag, BUKAN key real,
+// jadi OpenRouter return 401 "Missing Authentication header". Sekarang
+// flow-nya: frontend → /api/ai/analysis → backend → OpenRouter.
 async function callOpenRouter(systemPrompt, userPrompt){
-  const token=await getORToken();
-  if(!token){toast('error','Token Required','Set OpenRouter token di Settings');openModal('modal-settings');return null;}
-
-  // Model fallback list — jika model pertama rate-limited, otomatis coba berikutnya
-  const MODELS = [
-    'google/gemini-2.0-flash-lite-001',
-    'google/gemini-flash-1.5',
-    'google/gemini-2.0-flash-001',
-    'meta-llama/llama-3.1-8b-instruct:free',
-    'mistralai/mistral-7b-instruct:free',
-  ];
-
-  let lastErr = null;
-  for(const model of MODELS){
-    try{
-      const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],temperature:0.7,max_tokens:4000})
-      });
-      if(!r.ok){
-        const errText=await r.text();
-        // Jika rate-limited (429) atau provider error, coba model berikutnya
-        let errJson={};try{errJson=JSON.parse(errText);}catch{}
-        const code=errJson?.error?.code||r.status;
-        if(code===429||r.status===429||(errText.includes('rate-limited')||errText.includes('rate_limit'))){
-          console.warn(`Model ${model} rate-limited, mencoba model berikutnya...`);
-          lastErr=new Error('OpenRouter error: '+errText);
-          continue;
-        }
-        throw new Error('OpenRouter error: '+errText);
+  try{
+    const r = await fetch(`${API}/ai/analysis`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...authHeaders()},
+      body:JSON.stringify({
+        systemPrompt,
+        userPrompt,
+        temperature:0.7,
+        max_tokens:4000,
+      })
+    });
+    if(!r.ok){
+      let errJson={};try{errJson=await r.json();}catch{}
+      // Kalau key belum di-set, arahkan user buka Settings
+      if(errJson?.error==='openrouter_not_configured'){
+        toast('error','Token Required','Set OpenRouter API key di Settings → AI Agent');
+        try{ openSettingsModal(); }catch{}
+        return null;
       }
-      const d=await r.json();
-      return d.choices?.[0]?.message?.content||'No response';
-    }catch(e){
-      if(e.message.includes('OpenRouter error')&&(e.message.includes('rate-limited')||e.message.includes('429'))){
-        lastErr=e;continue;
-      }
-      throw e;
+      throw new Error(errJson?.message || `Backend error HTTP ${r.status}`);
     }
+    const d = await r.json();
+    return d.content || 'No response';
+  }catch(e){
+    // Network error / unhandled — propagate ke caller
+    throw new Error('AI request failed: '+e.message);
   }
-  throw lastErr||new Error('Semua model AI sedang sibuk, coba beberapa saat lagi.');
 }
 
 async function runAIAnalysis(){
@@ -1348,38 +1913,145 @@ Jangan tambahkan markdown backticks atau apapun di luar JSON.`;
 }
 
 // ===== TOKEN =====
-async function loadToken(){
-  try{
-    const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();
-    if(d.value){
-      const sToken=document.getElementById('s-token');if(sToken)sToken.value=d.value;
-      const tokenOk=document.getElementById('token-ok');if(tokenOk)tokenOk.style.display='block';
-      return d.value;
-    }
-  }catch(e){}
-  const l=localStorage.getItem('apify_token');
-  if(l){const sToken=document.getElementById('s-token');if(sToken)sToken.value=l;return l;}
-  return null;
-}
-async function saveToken(){
-  const sToken=document.getElementById('s-token');if(!sToken)return;
-  const t=sToken.value.trim();if(!t){toast('error','Error','Token kosong');return;}
-  try{
-    await fetch(`${API}/settings/apify_token`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:t})});
-    const tokenOk=document.getElementById('token-ok');if(tokenOk)tokenOk.style.display='block';
-    toast('success','Saved!','Token disimpan di database');
-  }catch(e){localStorage.setItem('apify_token',t);toast('info','Saved locally','Backend unavailable');}
-}
-async function getToken(){const t=document.getElementById('s-token').value.trim();if(t)return t;try{const r=await fetch(`${API}/settings/apify_token`);const d=await r.json();if(d.value)return d.value;}catch(e){}return localStorage.getItem('apify_token')||'';}
+// (Apify removed — tinggal OpenRouter token saja di getORToken/saveORToken)
 
 // ===== PROJECTS =====
 async function loadProjects(){
   try{const r=await fetch(`${API}/projects`);projects=await r.json();}catch(e){projects=[];}
   renderSidebar();
-  if(projects.length>0&&!currentProject)selectProject(projects[0]);
-  else if(projects.length===0){
-    const el=document.getElementById('no-project-msg');
-    if(el)el.style.display='block';
+
+  // ─── Monitor mode: auto-navigate berdasarkan URL params ?view=X&project_id=Y&fullscreen=1 ───
+  // Dipakai oleh Command Center launcher untuk reuse page utama sebagai monitor M1-M5.
+  const monitorMode = applyMonitorModeFromUrl();
+
+  if (!monitorMode) {
+    if(projects.length>0&&!currentProject)selectProject(projects[0]);
+    else if(projects.length===0){
+      const el=document.getElementById('no-project-msg');
+      if(el)el.style.display='block';
+    }
+  }
+}
+
+// ─── Monitor mode helper ───
+// Parse URL params, kalau ada `?view=X&project_id=Y&fullscreen=1`:
+//   1. Aktifkan fullscreen mode (hide sidebar + topbar)
+//   2. Auto-select project sesuai project_id
+//   3. Auto-navigate ke view tertentu
+//   4. Setup WebSocket listener untuk auto-refresh saat scheduler complete
+//   5. Return true supaya loadProjects gak override dengan default project
+function applyMonitorModeFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view');
+  const projectId = params.get('project_id');
+  const fullscreen = params.get('fullscreen') === '1';
+  const monitorId = params.get('monitor_id');
+
+  if (!view && !fullscreen) return false;
+
+  // 1. Fullscreen mode — hide sidebar + topbar via class on body
+  if (fullscreen) {
+    document.body.classList.add('monitor-fullscreen');
+    // Override topbar dengan minimal monitor header
+    const topbar = document.getElementById('topbar');
+    if (topbar && monitorId) {
+      const status = document.createElement('div');
+      status.id = 'monitor-status-pill';
+      status.style.cssText = 'position:fixed;top:8px;right:12px;padding:4px 10px;border-radius:999px;font-size:10px;font-family:ui-monospace,monospace;letter-spacing:.5px;background:rgba(0,0,0,.7);color:#fff;z-index:9999;border:1px solid rgba(255,255,255,.1);';
+      status.innerHTML = `🟢 M${monitorId} · live`;
+      document.body.appendChild(status);
+    }
+  }
+
+  // 2. Auto-select project
+  if (projectId && projects.length > 0) {
+    const target = projects.find(p => String(p._id || p.id) === String(projectId));
+    if (target) {
+      selectProject(target);
+    } else {
+      console.warn('[monitor] project_id from URL not found:', projectId);
+      if (projects.length > 0) selectProject(projects[0]);
+    }
+  } else if (projects.length > 0 && !currentProject) {
+    selectProject(projects[0]);
+  }
+
+  // 3. Auto-navigate ke view
+  if (view) {
+    setTimeout(() => navTo(view), 100);
+  }
+
+  // 4. Setup auto-refresh saat scheduler complete (WebSocket)
+  if (fullscreen) {
+    setupMonitorWebSocket();
+  }
+
+  return true;
+}
+
+// ─── Monitor WebSocket — listen scheduler_complete + critical_alert untuk auto-refresh ───
+let _monitorWS = null;
+function setupMonitorWebSocket() {
+  if (_monitorWS) return;
+  try {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${location.host}/ws`;
+    _monitorWS = new WebSocket(wsUrl);
+
+    _monitorWS.onopen = () => {
+      const params = new URLSearchParams(location.search);
+      const monitorId = params.get('monitor_id') || '0';
+      _monitorWS.send(JSON.stringify({ type: 'subscribe', monitor_id: parseInt(monitorId, 10) }));
+      const pill = document.getElementById('monitor-status-pill');
+      if (pill) pill.innerHTML = `🟢 M${monitorId} · live`;
+    };
+
+    _monitorWS.onclose = () => {
+      const params = new URLSearchParams(location.search);
+      const monitorId = params.get('monitor_id') || '0';
+      const pill = document.getElementById('monitor-status-pill');
+      if (pill) pill.innerHTML = `🔴 M${monitorId} · disconnected`;
+      // Auto-reconnect setelah 3 detik
+      setTimeout(() => { _monitorWS = null; setupMonitorWebSocket(); }, 3000);
+    };
+
+    _monitorWS.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        // Auto-refresh data saat scheduler selesai cycle (~tiap N menit)
+        if (msg.type === 'scheduler_complete') {
+          if (currentProject) loadProjectData();
+        }
+        // Critical alert banner
+        if (msg.type === 'critical_alert') {
+          showMonitorAlertBanner(msg);
+        }
+      } catch (e) { /* ignore non-JSON */ }
+    };
+  } catch (e) {
+    console.warn('[monitor-ws] failed:', e);
+  }
+}
+
+function showMonitorAlertBanner(msg) {
+  let banner = document.getElementById('monitor-alert-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'monitor-alert-banner';
+    banner.style.cssText = 'position:fixed;top:50px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;padding:14px 22px;border-radius:10px;font-weight:600;font-size:14px;z-index:99999;box-shadow:0 8px 28px rgba(220,38,38,.55);max-width:min(90vw,720px);cursor:pointer;';
+    banner.onclick = () => banner.remove();
+    document.body.appendChild(banner);
+  }
+  const alerts = Array.isArray(msg.alerts) ? msg.alerts : [msg];
+  banner.innerHTML = alerts.map(a => `
+    <div style="font-size:11px;opacity:.85;letter-spacing:1px;">⚠️ ${(a.severity || 'alert').toUpperCase()} — ${a.type || 'alert'}</div>
+    <div style="margin-top:4px;">${a.message || a.summary || ''}</div>
+    ${msg.keyword ? `<div style="margin-top:4px;font-size:11px;opacity:.85;">Keyword: <b>${msg.keyword}</b></div>` : ''}
+  `).join('<hr style="border:none;border-top:1px solid rgba(255,255,255,.2);margin:6px 0;">');
+  // Auto-hide setelah 30 detik untuk medium/low, manual close untuk critical/high
+  const sev = (alerts[0]?.severity || '').toLowerCase();
+  if (sev !== 'critical' && sev !== 'high') {
+    setTimeout(() => banner?.remove(), 30000);
   }
 }
 
@@ -1683,8 +2355,8 @@ function renderCharts(stats){
   if(currentView==='dashboard'){
     // Volume
     const dateMap={};stats.byDate.forEach(d=>{if(!dateMap[d.date])dateMap[d.date]={};dateMap[d.date][d.platform]=d.count;});
-    const platNames=['tiktok','twitter','instagram','facebook','youtube','news'];
-    const colors=['rgba(0,242,234,0.7)','rgba(29,161,242,0.7)','rgba(225,48,108,0.7)','rgba(24,119,242,0.7)','rgba(255,0,0,0.7)','rgba(249,115,22,0.7)'];
+    const platNames=['tiktok','twitter','instagram','facebook','youtube','threads','news'];
+    const colors=['rgba(0,242,234,0.7)','rgba(29,161,242,0.7)','rgba(225,48,108,0.7)','rgba(24,119,242,0.7)','rgba(255,0,0,0.7)','rgba(180,180,180,0.7)','rgba(249,115,22,0.7)'];
     const el1=document.getElementById('c-volume');if(el1)charts.vol=new Chart(el1,{type:'bar',data:{labels:dates.map(d=>d?.substring(5)||''),datasets:platNames.map((p,i)=>({label:p.charAt(0).toUpperCase()+p.slice(1),data:dates.map(d=>dateMap[d]?.[p]||0),backgroundColor:colors[i],borderRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:'#9298a8',font:{size:9}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#5c6178',font:{size:9}}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5c6178',font:{size:9}}}}}});
 
     // Top posts - clickable list with links
@@ -1729,7 +2401,7 @@ function renderCharts(stats){
       const kws=parseKeywords(currentProject.keywords);
       const kwPat=kws.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
       const kwRe=new RegExp(`(${kwPat})`,'gi');
-      feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):(p.timestamp?new Date(p.timestamp).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?'<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• '+postDate+'</span>':''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Update Data" to start!</p></div>';
+      feedEl.innerHTML=posts.length?posts.slice(0,60).map(p=>{const c=P_CFG[p.platform]||P_CFG.tiktok;const hl=(p.content||'').replace(kwRe,'<span class="kw-hl">$1</span>');const av=proxiedAvatar(p.avatar)||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.author||'U')}&background=${c.color.replace('#','')}&color=fff&size=36&bold=true`;const postDate=p.post_date?new Date(p.post_date).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):(p.timestamp?new Date(p.timestamp).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');return`<div class="feed-item"><div class="feed-header"><div class="feed-author"><div class="author-avatar"><img referrerpolicy="no-referrer" src="${av}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=36'"></div><div><div class="author-name">${p.author||'Unknown'}</div><div class="author-handle">${p.handle||''} ${postDate?'<span style="color:var(--text-3);font-size:9px;margin-left:4px;">• '+postDate+'</span>':''}</div></div></div><div class="feed-meta"><span class="feed-platform" style="color:${c.color}"><i class="${c.icon}"></i></span><span class="feed-sent ${p.sentiment}">${p.sentiment}</span></div></div><div class="feed-body">${hl||'<em>No content</em>'}</div><div class="feed-footer"><div class="feed-stats"><span class="feed-stat hl"><i class="fas fa-eye"></i> ${fmt(p.views)}</span><span class="feed-stat"><i class="fas fa-heart"></i> ${fmt(p.likes)}</span><span class="feed-stat"><i class="fas fa-share"></i> ${fmt(p.shares)}</span></div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:9px;color:var(--accent-2);text-decoration:none;">Open <i class="fas fa-external-link-alt"></i></a>`:''}</div></div>`;}).join(''):'<div class="empty"><i class="fas fa-inbox"></i><p>No mentions yet. Click "Update Data" to start!</p></div>';
     }
   }
 
@@ -1987,7 +2659,6 @@ function updateScrapeMode() {
 
 async function startScraping(){
   closeModal('modal-scrape');
-  const token=await getToken();
   const maxR=parseInt(document.getElementById('sc-max').value);
   const mode = document.querySelector('input[name="scrape-mode"]:checked').value;
   
@@ -2022,8 +2693,23 @@ async function startScraping(){
   console.log('Scraping keywords:', kws); // Debug log
   const plats=Array.isArray(currentProject.platforms)?currentProject.platforms:JSON.parse(currentProject.platforms||'[]');
 
-  const needsApify=plats.some(p=>p!=='tiktok');
-  if(needsApify&&!token){toast('error','Token Required','Set Apify token di Settings');openModal('modal-settings');return;}
+  // Pastikan backend punya minimal 1 scraper aktif. Backend resolve URL sendiri (DB → env PC_SCRAPER_URL).
+  // Frontend cuma validate via /api/scrapers/health.
+  let scraperReady = false;
+  try {
+    const healthRes = await fetch(`${API}/scrapers/health`);
+    if (healthRes.ok) {
+      const health = await healthRes.json();
+      const list = Array.isArray(health) ? health : (health.scrapers || []);
+      scraperReady = list.some(s => s.online);
+    }
+  } catch {}
+
+  if (!scraperReady) {
+    toast('error','Scraper Required','Tidak ada scraper online. Cek Settings atau pastikan container pc-scraper running.');
+    openSettingsModal();
+    return;
+  }
 
   // Create session
   let sessionId=null;
@@ -2061,11 +2747,12 @@ async function startScraping(){
           let data=[];
           switch(platform){
             case 'tiktok':data=await fetchTikTok(kw,maxR,scFrom,scTo);break;
-            case 'twitter':data=await fetchTwitter(token,kw,maxR,scFrom,scTo);break;
-            case 'instagram':data=await fetchInstagram(token,kw,maxR,scFrom,scTo);break;
-            case 'facebook':data=await fetchFacebook(token,kw,maxR,scFrom,scTo);break;
-            case 'youtube':data=await fetchYouTube(token,kw,maxR,scFrom,scTo);break;
-            case 'news':data=await fetchNews(token,kw,maxR,scFrom,scTo);break;
+            case 'twitter':data=await fetchTwitter(kw,maxR,scFrom,scTo);break;
+            case 'instagram':data=await fetchInstagram(kw,maxR,scFrom,scTo);break;
+            case 'facebook':data=await fetchFacebook(kw,maxR,scFrom,scTo);break;
+            case 'youtube':data=await fetchYouTube(kw,maxR,scFrom,scTo);break;
+            case 'threads':data=await fetchThreads(kw,maxR,scFrom,scTo);break;
+            case 'news':data=await fetchNews(kw,maxR,scFrom,scTo);break;
           }
           data.forEach(p=>{p.sentiment=sentiment(p.content);p.cities=findCities(p.content);p.hashtags=findTags(p.content);p.keyword_matched=kw;});
           if (data.length > 0) {
@@ -2128,432 +2815,357 @@ async function startScraping(){
 }
 
 // ===== PLATFORM FETCH FUNCTIONS =====
-// IMPORTANT: No date filtering during scrape! Database handles deduplication via external_id
-// Date filtering is ONLY for dashboard display, not for data collection
+// Semua platform sekarang routing ke backend /api/scrape — backend handle
+// load-balancing antar HP Android. Frontend tidak perlu tahu detail source.
+// Output schema dipertahankan supaya komponen lain (sentiment, dedup, dll) tetap jalan.
 
-async function fetchTikTok(kw,max,from,to){
-  // Try Apify first (more data, requires token), fallback to tikwm
-  const token = await getToken();
-  
-  if(token) {
-    try {
-      console.log('TikTok: Using Apify actor');
-      const d = await fetchApify(token, 'clockworks~tiktok-scraper', {
-        searchQueries: [kw],
-        resultsPerPage: max,
-        maxResults: max,
-        shouldDownloadVideos: false,
-        shouldDownloadCovers: false
-      });
-      
-      if(d && d.length > 0) {
-        return d.map(v => {
-          let ts = new Date();
-          try { if(v.createTime) ts = new Date(v.createTime * 1000); else if(v.createdAt) ts = new Date(v.createdAt); } catch{}
-          return {
-            id: v.id || v.videoId || (v.webVideoUrl ? `tt_${v.webVideoUrl.split('/').pop()}` : null) || `tt_${(v.text||v.desc||'').slice(0,40).replace(/\W/g,'_')}_${v.authorMeta?.id||''}`,
-            platform: 'tiktok',
-            author: v.authorMeta?.name || v.author?.nickname || v.authorName || 'Unknown',
-            handle: '@' + (v.authorMeta?.id || v.author?.uniqueId || v.authorId || 'user'),
-            avatar: v.authorMeta?.avatar || v.author?.avatarThumb || '',
-            content: v.text || v.desc || v.title || '',
-            views: v.playCount || v.plays || v.videoMeta?.playCount || 0,
-            likes: v.diggCount || v.likes || v.videoMeta?.diggCount || 0,
-            shares: v.shareCount || v.shares || v.videoMeta?.shareCount || 0,
-            comments: v.commentCount || v.comments || v.videoMeta?.commentCount || 0,
-            timestamp: ts,
-            url: v.webVideoUrl || v.videoUrl || `https://tiktok.com/@${v.authorMeta?.id || 'user'}/video/${v.id}`,
-            source: 'TikTok'
-          };
-        });
-      }
-    } catch(e) {
-      console.log('Apify TikTok failed, falling back to tikwm:', e.message);
-    }
-  }
-  
-  // Fallback to tikwm (free but limited to 30)
-  const url=`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(kw)}&count=${Math.min(max, 30)}&cursor=0&web=1&hd=1`;
-  console.log('TikTok fetch (tikwm fallback):', url);
-  const r=await fetch(url);
-  const d=await r.json();
-  console.log('TikTok response:', d);
-  if(d.code!==0||!d.data?.videos){
-    console.error('TikTok error:', d.msg);
-    throw new Error(d.msg||'No data');
-  }
-  
-  const results = d.data.videos.map(v=>{
-    let av=v.author?.avatar||'';
-    if(av&&!av.startsWith('http'))av='https://www.tikwm.com'+av;
-    const ts=v.create_time?new Date(v.create_time*1000):new Date();
-    return{
-      id:v.video_id||v.id,
-      platform:'tiktok',
-      author:v.author?.nickname||'Unknown',
-      handle:'@'+(v.author?.unique_id||'user'),
-      avatar:av,
-      content:v.title||'',
-      views:v.play_count||0,
-      likes:v.digg_count||0,
-      shares:v.share_count||0,
-      comments:v.comment_count||0,
-      timestamp:ts,
-      url:`https://tiktok.com/@${v.author?.unique_id}/video/${v.video_id||v.id}`,
-      source:'TikTok'
-    };
-  });
-  
-  console.log(`TikTok: ${results.length} posts collected`);
-  return results;
-}
-
-async function fetchApify(token,actor,input){const r=await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${token}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});if(!r.ok)throw new Error(await r.text());return await r.json();}
-
-// Helper: fetch via backend proxy to avoid CORS
-async function fetchApifyProxy(token, actor, input) {
-  console.log(`Using backend proxy for ${actor}`);
-  console.log('Input:', JSON.stringify(input));
-  
-  const response = await fetch(`${API}/apify-proxy`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, actor, input })
-  });
-  
-  if(!response.ok) {
-    const errText = await response.text();
-    console.error(`${actor} proxy error:`, errText);
-    throw new Error(errText);
-  }
-  
-  const d = await response.json();
-  console.log(`${actor} results:`, Array.isArray(d) ? d.length : 'N/A');
-  return d;
-}
-
-// Twitter - use backend proxy to avoid CORS
-async function fetchTwitter(token,kw,max,from,to){
-  const input = {
-    searchTerms: [kw],
-    maxTweets: max,
-    maxItems: max,
-    sort: 'Latest'
+// Helper utama: panggil /api/scrape dengan timeout & error handling
+//
+// Timeout per platform — frontend kasih waktu lebih dari nginx (600s) supaya
+// abort terjadi di nginx layer dulu (yang punya error message). Kalau frontend
+// timeout duluan, user lihat "AbortError" tanpa context.
+//
+// Facebook scrape multi-pass bisa makan 3-5 menit untuk max_results besar,
+// jadi default timeout 60s di fetch() akan abort terlalu cepat. Pakai
+// AbortController dengan limit yang sesuai per-platform.
+async function callBackendScrape(payload) {
+  const PLATFORM_TIMEOUTS_MS = {
+    facebook: 660_000,   // 11 menit — sedikit lebih dari nginx 600s
+    instagram: 300_000,  // 5 menit
+    twitter:  300_000,
+    tiktok:   180_000,
+    youtube:  300_000,   // 5 menit — full extract per-video (was 2 min di flat mode)
+    threads:  300_000,   // 5 menit — single-pass scroll, mirror Twitter
+    news:      90_000,
   };
-  
-  const d = await fetchApifyProxy(token, 'kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest', input);
-  
-  return d.filter(t=>{
-    const x = t.text || t.full_text || '';
-    return !x.includes('KaitoEasyAPI') && t.id !== -1 && t.id !== '-1';
-  }).map(t=>{
-    let h = 'user';
-    if(t.url) h = t.url.split('/')[3] || 'user';
-    let ts = new Date();
-    try { if(t.createdAt) ts = new Date(t.createdAt); } catch{}
-    return {
-      id: t.id || (t.url ? `tw_${t.url.split('/').pop()}` : null) || `tw_${(t.text||t.full_text||'').slice(0,50).replace(/\W/g,'_')}`,
-      platform: 'twitter',
-      author: t['author.name'] || t.author?.name || h,
-      handle: '@' + h,
-      avatar: t['author.profilePicture'] || t.author?.profilePicture,
-      content: t.text || t.full_text || '',
-      views: t.viewCount || 0,
-      likes: t.likeCount || 0,
-      shares: t.retweetCount || 0,
-      comments: t.replyCount || 0,
-      timestamp: ts,
-      url: t.url || '',
-      source: 'Twitter'
-    };
-  });
+  const timeoutMs = PLATFORM_TIMEOUTS_MS[payload?.platform] || 180_000;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const r = await fetch(`${API}/scrape`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!r.ok) {
+      let errMsg = `HTTP ${r.status}`;
+      let userHint = '';
+
+      // 504 Gateway Timeout dari nginx — actual scrape mungkin masih jalan
+      // di backend, tapi nginx udah putus connection. Kasih hint biar user
+      // gak panik & coba lagi 1-2 menit kemudian.
+      if (r.status === 504) {
+        userHint = (
+          ` Scraping ${payload.platform} memakan waktu lebih dari batas timeout. ` +
+          `Sering kejadian untuk Facebook dengan max_results besar (multi-pass scrape). ` +
+          `Coba lagi setelah ~1-2 menit, atau turunkan max_results.`
+        );
+      } else if (r.status === 502 || r.status === 503) {
+        userHint = ' Backend tidak responsive — cek log backend / pc-scraper container.';
+      }
+
+      try {
+        const j = await r.json();
+        errMsg = j.error || j.message || errMsg;
+        if (j.attempts) errMsg += ` (${j.attempts.length} HP gagal)`;
+      } catch {
+        // 504 dari nginx return HTML, gak ada JSON. errMsg pakai HTTP status.
+        errMsg = `HTTP ${r.status} (${r.statusText || 'Gateway Timeout'})`;
+      }
+
+      throw new Error(errMsg + userHint);
+    }
+
+    const data = await r.json();
+    return Array.isArray(data.posts) ? data.posts : [];
+  } catch (e) {
+    clearTimeout(timer);
+    // AbortError = user/timeout cancel
+    if (e.name === 'AbortError') {
+      throw new Error(
+        `Request ${payload.platform} timeout setelah ${Math.round(timeoutMs/1000)}s. ` +
+        `Scrape mungkin masih jalan di backend — cek hasil 1-2 menit lagi atau ` +
+        `turunkan max_results.`
+      );
+    }
+    throw e;
+  }
 }
 
-// Instagram - Apify primary, multi-actor fallback, Android scraper as last resort
-async function fetchInstagram(token,kw,max,from,to){
-  const ht = kw.replace(/\s+/g,'').replace(/[^a-zA-Z0-9_]/g,'');
-  
-  // Helper: stable ID generator based on URL/shortCode/content
-  // Replaces Math.random() so dedup works even when API returns malformed posts
-  const stableId = (p) => {
-    if (p.id) return String(p.id);
-    if (p.shortCode) return `ig_${p.shortCode}`;
-    if (p.url) return `ig_url_${p.url.replace(/\W/g,'').slice(-40)}`;
-    const txt = (p.caption || p.text || '').slice(0, 60).replace(/\W/g, '_');
-    if (txt) return `ig_txt_${txt}_${(p.ownerUsername||'')}`;
-    return null; // signal "skip this row"
-  };
-  
-  const normalize = (rows) => rows.filter(p => p && !p.error && p.type !== 'error').map(p => {
-    let ts = new Date();
-    try {
-      if (p.timestamp && !isNaN(p.timestamp)) ts = new Date(p.timestamp * 1000);
-      else if (p.taken_at && !isNaN(p.taken_at)) ts = new Date(p.taken_at * 1000);
-      else if (p.takenAt) ts = new Date(p.takenAt);
-    } catch{}
-    const id = stableId(p);
-    if (!id) return null;
-    return {
-      id,
-      platform: 'instagram',
-      author: p.ownerUsername || p.username || 'Unknown',
-      handle: '@' + (p.ownerUsername || p.username || 'user'),
-      avatar: p.profilePicUrl || p.profile_pic_url,
-      content: p.caption || p.text || '',
-      views: p.videoViewCount || p.video_view_count || 0,
-      likes: p.likesCount || p.like_count || 0,
-      shares: 0,
-      comments: p.commentsCount || p.comment_count || 0,
-      timestamp: ts,
-      url: p.url || (p.shortCode ? `https://instagram.com/p/${p.shortCode}` : ''),
-      source: 'Instagram'
-    };
-  }).filter(Boolean);
-  
-  // Tier 1: Apify primary + alternative actors
-  const apifyActors = [
-    { name: 'apify~instagram-hashtag-scraper', input: { hashtags: [ht], resultsLimit: max, resultsType: 'posts' } },
-    { name: 'apify~instagram-search-scraper', input: { search: ht, searchType: 'hashtag', resultsLimit: max } },
-    { name: 'apify~instagram-scraper', input: { directUrls: [`https://www.instagram.com/explore/tags/${ht}/`], resultsLimit: max, resultsType: 'posts' } }
-  ];
-  
-  if (token) {
-    for (const actor of apifyActors) {
-      try {
-        console.log(`Instagram: trying ${actor.name}`);
-        const d = await fetchApifyProxy(token, actor.name, actor.input);
-        const posts = normalize(Array.isArray(d) ? d : []);
-        if (posts.length > 0) {
-          console.log(`Instagram: ${actor.name} returned ${posts.length} posts`);
-          return posts;
-        }
-        console.log(`Instagram: ${actor.name} returned empty, trying next`);
-      } catch (e) {
-        console.log(`Instagram: ${actor.name} failed:`, e.message);
-      }
-    }
-  }
-  
-  // Tier 2: Android scraper fallback (if user configured one)
-  const androidUrls = await getAndroidScraperUrls();
-  if (androidUrls.length > 0) {
-    for (const url of androidUrls) {
-      try {
-        console.log(`Instagram: trying Android scraper at ${url}`);
-        const r = await fetch(`${API}/android-scraper`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scraper_url: url, platform: 'instagram', keyword: ht, max_results: max })
-        });
-        if (!r.ok) continue;
-        const data = await r.json();
-        const posts = normalize(data.posts || []);
-        if (posts.length > 0) {
-          console.log(`Instagram: Android scraper ${url} returned ${posts.length} posts`);
-          return posts;
-        }
-      } catch (e) {
-        console.log(`Instagram: Android scraper ${url} failed:`, e.message);
-      }
-    }
-  }
-  
-  console.log('Instagram: all sources exhausted, returning empty');
-  return [];
-}
-
-// Helper: get Android scraper URLs from settings (returns array of URLs)
+// Helper: ambil URL scraper. Prioritas: setting di UI → env PC_SCRAPER_URL (server-side) → default Docker network.
 async function getAndroidScraperUrls() {
   try {
-    const res = await fetch(`${API}/settings/android_scraper_urls`);
-    if (!res.ok) return [];
-    const s = await res.json();
-    if (!s?.value) return [];
-    // Comma-separated list of URLs
-    return s.value.split(',').map(u => u.trim()).filter(Boolean);
+    // Coba endpoint baru (unified settings) dulu
+    const res = await fetch(`${API}/settings/all`, { headers: authHeaders() });
+    if (res.ok) {
+      const s = await res.json();
+      const v = (s?.pc_scraper_url || '').trim();
+      if (v) {
+        return v.split(',').map(u => u.trim().replace(/\/$/, '')).filter(Boolean);
+      }
+    }
+
+    // Fallback ke endpoint lama (backward compat untuk install lama)
+    try {
+      const res2 = await fetch(`${API}/settings/android_scraper_urls`, { headers: authHeaders() });
+      if (res2.ok) {
+        const s2 = await res2.json();
+        if (s2?.value) {
+          return s2.value.split(',').map(u => u.trim().replace(/\/$/, '')).filter(Boolean);
+        }
+      }
+    } catch {}
+
+    return ['__backend_default__'];
   } catch {
+    return ['__backend_default__'];
+  }
+}
+
+// Helper: stable ID untuk dedup di MongoDB (replaces Math.random() — penting!)
+function stableId(prefix, p) {
+  if (p.id) return String(p.id);
+  if (p.shortCode) return `${prefix}_${p.shortCode}`;
+  if (p.url) return `${prefix}_url_${p.url.replace(/\W/g,'').slice(-50)}`;
+  const txt = (p.caption || p.text || p.title || '').slice(0, 60).replace(/\W/g,'_');
+  if (txt) return `${prefix}_txt_${txt}_${(p.username||p.ownerUsername||'')}`;
+  return null; // signal "skip this row"
+}
+
+// Helper: parse timestamp dari berbagai format scraper
+function parseTimestamp(p) {
+  let ts = new Date();
+  try {
+    if (p.timestamp && !isNaN(p.timestamp)) {
+      // Unix seconds atau milliseconds — jika < tahun 2001 di seconds berarti memang seconds
+      const n = Number(p.timestamp);
+      ts = new Date(n > 1e12 ? n : n * 1000);
+    } else if (p.taken_at && !isNaN(p.taken_at)) {
+      const n = Number(p.taken_at);
+      ts = new Date(n > 1e12 ? n : n * 1000);
+    } else if (p.takenAt) {
+      ts = new Date(p.takenAt);
+    } else if (p.date) {
+      ts = new Date(p.date);
+    }
+  } catch{}
+  if (isNaN(ts.getTime())) ts = new Date();
+  return ts;
+}
+
+// === Instagram ===
+async function fetchInstagram(kw, max, from, to) {
+  const ht = kw.replace(/\s+/g,'').replace(/[^a-zA-Z0-9_]/g,'');
+  try {
+    const raw = await callBackendScrape({ platform:'instagram', keyword: ht, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('ig', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'instagram',
+        author: p.ownerUsername || p.username || 'Unknown',
+        handle: '@' + (p.ownerUsername || p.username || 'user'),
+        avatar: p.profilePicUrl || p.profile_pic_url,
+        content: p.caption || p.text || '',
+        views: p.videoViewCount || p.video_view_count || 0,
+        likes: p.likesCount || p.like_count || 0,
+        shares: 0,
+        comments: p.commentsCount || p.comment_count || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || (p.shortCode ? `https://instagram.com/p/${p.shortCode}` : ''),
+        source: 'Instagram'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('Instagram fetch error:', e.message);
     return [];
   }
 }
 
-// Facebook - use sasky/facebook-keyword-videos-urls-scraper via backend proxy
-async function fetchFacebook(token,kw,max,from,to){
-  console.log('Facebook: Using backend proxy for sasky/facebook-keyword-videos-urls-scraper');
-  
-  // Build input matching Apify Console format exactly
-  // NOTE: limit must be STRING not number!
-  const input = {
-    keywords: [kw],
-    limit: String(max || 30),  // Must be string!
-    date: "last-6-months"      // Default date filter
-  };
-  
-  // Custom date range if provided
-  if(from && to) {
-    input.from = from;  // YYYY-MM-DD
-    input.to = to;      // YYYY-MM-DD
-    delete input.date;  // Remove preset date when using custom range
+// === TikTok ===
+async function fetchTikTok(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'tiktok', keyword: kw, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('tt', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'tiktok',
+        author: p.username || p.ownerUsername || 'Unknown',
+        handle: '@' + (p.username || p.ownerUsername || 'user'),
+        avatar: p.profilePicUrl || p.profile_pic_url || '',
+        content: p.caption || p.text || '',
+        views: p.videoViewCount || p.video_view_count || 0,
+        likes: p.likesCount || p.like_count || 0,
+        shares: p.shareCount || 0,
+        comments: p.commentsCount || p.comment_count || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || '',
+        source: 'TikTok'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('TikTok fetch error:', e.message);
+    return [];
   }
-  
-  console.log('Facebook input:', JSON.stringify(input));
-  
-  // Use backend proxy to avoid CORS
-  const response = await fetch(`${API}/apify-proxy`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      token: token,
-      actor: 'sasky/facebook-keyword-videos-urls-scraper',
-      input: input
-    })
-  });
-  
-  if(!response.ok) {
-    const errText = await response.text();
-    console.error('Facebook proxy error:', errText);
-    throw new Error(errText);
-  }
-  
-  const d = await response.json();
-  console.log('Facebook results:', d.length);
-  
-  return d.filter(p => !p.error).map(p => {
-    let ts = new Date();
-    try {
-      if(p.date) ts = new Date(p.date);
-      else if(p.timestamp) ts = new Date(p.timestamp);
-    } catch{}
-    
-    return {
-      id: p.video_url || p.url || `fb_${(p.author_name||'').replace(/\W/g,'')}_${(p.keyword||kw||'').slice(0,30).replace(/\W/g,'')}_${ts.getTime()}`,
-      platform: 'facebook',
-      author: p.author_name || 'Unknown',
-      handle: p.author_link || '',
-      avatar: null,
-      content: p.keyword || kw,  // This actor returns keyword, not full content
-      views: 0,
-      likes: 0,
-      shares: 0,
-      comments: 0,
-      timestamp: ts,
-      url: p.video_url || '',
-      source: p.author_name || 'Facebook'
-    };
-  });
 }
 
-// YouTube - use backend proxy to avoid CORS
-async function fetchYouTube(token,kw,max,from,to){
-  console.log('YouTube: Using backend proxy for streamers~youtube-scraper');
-  
-  const input = {
-    searchKeywords: kw,
-    maxResults: max
-  };
-  
-  console.log('YouTube input:', JSON.stringify(input));
-  
-  // Use backend proxy to avoid CORS
-  const response = await fetch(`${API}/apify-proxy`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      token: token,
-      actor: 'streamers~youtube-scraper',
-      input: input
-    })
-  });
-  
-  if(!response.ok) {
-    const errText = await response.text();
-    console.error('YouTube proxy error:', errText);
-    throw new Error(errText);
+// === Facebook ===
+async function fetchFacebook(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'facebook', keyword: kw, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('fb', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'facebook',
+        author: p.username || p.ownerUsername || 'Unknown',
+        handle: p.username || '',
+        avatar: p.profilePicUrl || p.profile_pic_url || null,
+        content: p.caption || p.text || '',
+        views: p.videoViewCount || 0,
+        likes: p.likesCount || p.like_count || 0,
+        shares: p.shareCount || 0,
+        comments: p.commentsCount || p.comment_count || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || '',
+        source: p.username || 'Facebook'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('Facebook fetch error:', e.message);
+    return [];
   }
-  
-  const d = await response.json();
-  console.log('YouTube results:', d.length);
-  
-  return d.map(v=>{
-    let ts=new Date();
-    try{
-      if(v.date) ts=new Date(v.date);
-      else if(v.uploadDate) ts=new Date(v.uploadDate);
-    }catch{}
-    return {
-      id: v.id || (v.url ? `yt_${(v.url.match(/v=([^&]+)/) || [])[1] || v.url.split('/').pop()}` : null) || `yt_${(v.title||'').slice(0,50).replace(/\W/g,'_')}`,
-      platform: 'youtube',
-      author: v.channelName || 'Unknown',
-      handle: v.channelUrl || '',
-      avatar: v.channel?.thumbnail || null,
-      content: v.title || '',
-      views: v.viewCount || v.views || 0,
-      likes: v.likes || 0,
-      shares: 0,
-      comments: v.numberOfComments || 0,
-      timestamp: ts,
-      url: v.url || '',
-      source: v.channelName || 'YouTube'
-    };
-  });
 }
 
-// News - use backend proxy to avoid CORS
-async function fetchNews(token,kw,max,from,to){
-  console.log('News: Using backend proxy for apify~google-search-scraper');
-  
-  const input = {
-    queries: kw,
-    resultsPerPage: max,
-    mobileResults: false,
-    languageCode: 'id',
-    countryCode: 'id',
-    searchType: 'news'
-  };
-  
-  console.log('News input:', JSON.stringify(input));
-  
-  // Use backend proxy to avoid CORS
-  const response = await fetch(`${API}/apify-proxy`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      token: token,
-      actor: 'apify~google-search-scraper',
-      input: input
-    })
-  });
-  
-  if(!response.ok) {
-    const errText = await response.text();
-    console.error('News proxy error:', errText);
-    throw new Error(errText);
+// === YouTube ===
+async function fetchYouTube(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'youtube', keyword: kw, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('yt', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'youtube',
+        author: p.username || p.ownerUsername || 'Unknown',
+        handle: p.channel_url || p.username || '',
+        avatar: p.profilePicUrl || p.profile_pic_url || null,
+        content: p.title || p.caption || p.text || '',
+        views: p.videoViewCount || p.video_view_count || 0,
+        likes: p.likesCount || p.like_count || 0,
+        shares: 0,
+        comments: p.commentsCount || p.comment_count || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || '',
+        source: p.username || 'YouTube'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('YouTube fetch error:', e.message);
+    return [];
   }
-  
-  const d = await response.json();
-  console.log('News results:', d.length);
-  
-  const res = d[0]?.organicResults || d || [];
-  return res.filter(n=>n&&n.url).map(n=>{
-    let ts=new Date();
-    try{ if(n.date) ts=new Date(n.date); }catch{}
-    let src='News';
-    try{ src=n.source||new URL(n.url).hostname.replace('www.',''); }catch{}
-    return {
-      id: n.url || `news_${src}_${(n.title||'').slice(0,60).replace(/\W/g,'_')}`,
-      platform: 'news',
-      author: src,
-      handle: src,
-      avatar: null,
-      content: (n.title||'') + (n.description?' - '+n.description:''),
-      views: 0,
-      likes: 0,
-      shares: 0,
-      comments: 0,
-      timestamp: ts,
-      url: n.url || '',
-      source: src
-    };
-  });
+}
+
+// === News (Indonesia) ===
+async function fetchNews(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'news', keyword: kw, max_results: max });
+    return raw.filter(p => p && p.url).map(p => {
+      const id = stableId('news', p);
+      if (!id) return null;
+      const src = p.source || p.username || (() => {
+        try { return new URL(p.url).hostname.replace('www.',''); } catch { return 'News'; }
+      })();
+      return {
+        id,
+        platform: 'news',
+        author: src,
+        handle: src,
+        avatar: null,
+        content: (p.title || p.caption || '') + (p.description ? ' - ' + p.description : ''),
+        views: 0,
+        likes: 0,
+        shares: 0,
+        comments: 0,
+        timestamp: parseTimestamp(p),
+        url: p.url,
+        source: src
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('News fetch error:', e.message);
+    return [];
+  }
+}
+
+// === Twitter ===
+async function fetchTwitter(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'twitter', keyword: kw, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('tw', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'twitter',
+        author: p.authorName || p.username || p.ownerUsername || 'Unknown',
+        handle: '@' + (p.username || p.ownerUsername || 'user'),
+        avatar: p.profilePicUrl || p.profile_pic_url || null,
+        content: p.caption || p.text || '',
+        views: p.videoViewCount || p.video_view_count || 0,
+        likes: p.likesCount || p.like_count || 0,
+        shares: p.shareCount || p.retweetCount || 0,
+        comments: p.commentsCount || p.comment_count || p.replyCount || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || '',
+        source: 'Twitter'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('Twitter fetch error:', e.message);
+    return [];
+  }
+}
+
+// ===== THREADS =====
+// Threads share auth dengan Instagram, tapi platform sendiri di MongoDB
+// supaya stats per-platform jelas terpisah.
+async function fetchThreads(kw, max, from, to) {
+  try {
+    const raw = await callBackendScrape({ platform:'threads', keyword: kw, max_results: max });
+    return raw.filter(p => p && !p.error).map(p => {
+      const id = stableId('th', p);
+      if (!id) return null;
+      return {
+        id,
+        platform: 'threads',
+        author: p.authorName || p.username || p.ownerUsername || 'Unknown',
+        handle: '@' + (p.username || p.ownerUsername || 'user'),
+        avatar: p.profilePicUrl || p.profile_pic_url || null,
+        content: p.caption || p.text || '',
+        views: p.videoViewCount || p.video_view_count || 0,
+        likes: p.likesCount || p.like_count || 0,
+        // Threads "share" = reshare + repost (kalau ada keduanya, prioritaskan reshare)
+        shares: p.shareCount || p.repostCount || 0,
+        comments: p.commentsCount || p.comment_count || 0,
+        timestamp: parseTimestamp(p),
+        url: p.url || '',
+        source: 'Threads'
+      };
+    }).filter(Boolean);
+  } catch (e) {
+    console.error('Threads fetch error:', e.message);
+    return [];
+  }
 }
 
 // ===== EXPORTS =====
@@ -3269,12 +3881,632 @@ async function generatePDF(){
 document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 setDatePreset(3);
 
+// ════════════════════════════════════════════════════════════════
+// ACCOUNT MANAGER (Fase 2)
+// ════════════════════════════════════════════════════════════════
+
+const ACC_PLATFORM_FORMS = {
+  instagram: {
+    fields: [
+      { name: 'username', label: 'Label akun (bebas — buat identifier)', type: 'text', required: true, placeholder: 'ig_main' },
+      { name: 'password', label: 'Cookie / storage_state (paste dari multi_capture, atau cookies dari DevTools)',
+        type: 'cookie_textarea', required: true, parse_for: 'instagram',
+        placeholder: 'Paste mentah → klik "Format Otomatis".\n\nContoh hasil akhir: {"sessionid":"12345%3AabcXYZ%3A...","ds_user_id":"12345","csrftoken":"..."}\n\nAtau paste full storage_state JSON dari multi_capture (file sessions/instagram_<label>.json).' },
+    ],
+    instructions: `
+      <div class="acc-info-box">
+        <strong><i class="fab fa-instagram" style="color:#e1306c;"></i> Instagram Cookie Setup (v3)</strong>
+        <p style="margin:6px 0;font-size:11px;opacity:.9;">
+          IG sekarang <b>cookie-based</b> (sebelumnya pakai instagrapi user/pass — sudah di-drop di v3).
+        </p>
+        <ol>
+          <li><b>RECOMMENDED:</b> pakai <code>multi_capture</code> (sister-tool standalone) — login manual sekali di Chromium real, klik tombol Push, otomatis ter-add di sini dengan storage_state lengkap (cookies + localStorage). Ini cara paling reliable karena login pakai stealth-mode browser yang gak ke-detect.</li>
+          <li><b>Manual:</b> login ke <a href="https://instagram.com" target="_blank">instagram.com</a> di browser desktop → <code>F12</code> → tab <b>Application</b> → <b>Cookies</b> → <code>https://www.instagram.com</code> → copy <code>sessionid</code>, <code>ds_user_id</code>, <code>csrftoken</code> → paste ke field di bawah → klik <b>Format Otomatis</b>.</li>
+        </ol>
+        <span style="display:block;font-size:11px;opacity:.7;margin-top:6px;">
+          <i class="fas fa-info-circle"></i> Format wajib: <code>sessionid</code> (formatnya <code>&lt;userid&gt;%3A&lt;token&gt;</code>) + <code>ds_user_id</code> (numerik). Parser auto-detect storage_state JSON / flat dict / cookie string.
+        </span>
+        <span class="acc-warn"><i class="fas fa-exclamation-triangle"></i> Pakai akun cadangan, bukan utama. Kalau akun baru / device baru: warm-up via app HP dulu beberapa hari sebelum capture, IG sensitif ke "device baru".</span>
+      </div>
+    `,
+  },
+  tiktok: {
+    fields: [
+      { name: 'username', label: 'Label akun (bebas — buat identifier)', type: 'text', required: true, placeholder: 'akun_alt_1' },
+      { name: 'password', label: 'Cookie (paste apa adanya — JSON, tabel DevTools, cookies.txt)',
+        type: 'cookie_textarea', required: true, parse_for: 'tiktok',
+        placeholder: 'Paste mentah → klik "Format Otomatis".\n\nContoh hasil akhir: {"ms_token":"...","sessionid":"...","tt_csrf_token":"..."}' },
+    ],
+    instructions: `
+      <div class="acc-info-box">
+        <strong><i class="fab fa-tiktok"></i> TikTok Cookie Setup</strong>
+        <ol>
+          <li>Login ke <a href="https://www.tiktok.com" target="_blank">tiktok.com</a> di browser desktop</li>
+          <li><code>F12</code> → tab <b>Application</b> → <b>Cookies</b> → <code>https://www.tiktok.com</code></li>
+          <li>Pilih semua row → Ctrl+C → paste ke field di bawah → klik <b>Format Otomatis</b></li>
+        </ol>
+        <span style="display:block;font-size:11px;opacity:.7;margin-top:6px;">
+          <i class="fas fa-info-circle"></i> Parser cari <code>ms_token</code>, <code>sessionid</code>, <code>tt_csrf_token</code> otomatis dari format apapun.
+        </span>
+        <span class="acc-warn"><i class="fas fa-info-circle"></i> Akun TikTok dikelola di service PC (tiktok-pc), bukan di HP. Cookie tahan beberapa hari sebelum perlu refresh.</span>
+      </div>
+    `,
+  },
+  facebook: {
+    fields: [
+      { name: 'username', label: 'Label akun', type: 'text', required: true, placeholder: 'fb_alt_1' },
+      { name: 'password', label: 'Cookie (paste apa adanya — mau JSON, tabel DevTools, atau cookies.txt)',
+        type: 'cookie_textarea', required: true, parse_for: 'facebook',
+        placeholder: 'Paste mentah dari DevTools / EditThisCookie / Cookie-Editor.\nKlik "Format Otomatis" buat convert ke JSON.\n\nContoh hasil akhir: {"c_user":"100012345","xs":"...","datr":"...","fr":"..."}' },
+    ],
+    instructions: `
+      <div class="acc-info-box">
+        <strong><i class="fab fa-facebook" style="color:#4f8af2;"></i> Facebook Cookie Setup</strong>
+        <ol>
+          <li>Login ke <a href="https://facebook.com" target="_blank">facebook.com</a> di browser desktop</li>
+          <li><code>F12</code> → tab <b>Application</b> → <b>Cookies</b> → <code>https://www.facebook.com</code></li>
+          <li>Pilih semua row (Ctrl+A di tabel cookies) → Ctrl+C</li>
+          <li>Paste ke field di bawah → klik <b>Format Otomatis</b>. Sistem extract <code>c_user</code>, <code>xs</code>, <code>datr</code>, <code>fr</code> sendiri.</li>
+        </ol>
+        <span style="display:block;font-size:11px;opacity:.7;margin-top:6px;">
+          <i class="fas fa-info-circle"></i> Format yg didukung: JSON, tabel DevTools (TSV), cookies.txt Netscape, atau <code>name=value;</code> dari header. Parser auto-detect.
+        </span>
+        <span class="acc-warn"><i class="fas fa-exclamation-triangle"></i> Login programatik FB selalu kena checkpoint — cookie satu-satunya cara reliable.</span>
+      </div>
+    `,
+  },
+  youtube: {
+    fields: [
+      { name: 'username', label: 'Label akun', type: 'text', required: true, placeholder: 'yt_main' },
+      { name: 'password', label: 'cookies.txt (Netscape format) atau ketik "anonymous"',
+        type: 'textarea', required: true,
+        placeholder: '# Netscape HTTP Cookie File\n.youtube.com  TRUE  /  FALSE  ...\n\natau ketik: anonymous' },
+    ],
+    instructions: `
+      <div class="acc-info-box">
+        <strong><i class="fab fa-youtube" style="color:#ff4c4c;"></i> YouTube Cookies</strong>
+        Untuk public videos cukup ketik <code>anonymous</code>. Untuk akses age-restricted/private, butuh <code>cookies.txt</code>.
+        <ol>
+          <li>Install extension Chrome <b>Get cookies.txt LOCALLY</b></li>
+          <li>Login ke YouTube → klik extension → Export</li>
+          <li>Buka file txt, paste isi penuhnya ke field di atas</li>
+        </ol>
+      </div>
+    `,
+  },
+  twitter: {
+    fields: [
+      { name: 'username', label: 'Label akun (bebas — buat identifier)', type: 'text', required: true, placeholder: 'tw_main' },
+      { name: 'password', label: 'Cookie / storage_state (paste dari multi_capture, atau cookies dari DevTools)',
+        type: 'cookie_textarea', required: true, parse_for: 'twitter',
+        placeholder: 'Paste mentah → klik "Format Otomatis".\n\nContoh hasil akhir: {"auth_token":"40_char_hex...","ct0":"32_char_hex...","twid":"u%3D123456789"}\n\nAtau paste full storage_state JSON dari multi_capture (file sessions/twitter_<label>.json).' },
+    ],
+    instructions: `
+      <div class="acc-info-box">
+        <strong><i class="fab fa-twitter" style="color:#4ab3f4;"></i> Twitter / X Cookie Setup (v3)</strong>
+        <p style="margin:6px 0;font-size:11px;opacity:.9;">
+          Twitter sekarang <b>cookie-based</b> (sebelumnya pakai twikit user/pass + email + TOTP — sudah di-drop di v3).
+        </p>
+        <ol>
+          <li><b>RECOMMENDED:</b> pakai <code>multi_capture</code> — login manual sekali di Chromium real, klik tombol Push. Stealth-mode browser bypass anti-bot X.</li>
+          <li><b>Manual:</b> login ke <a href="https://x.com" target="_blank">x.com</a> di browser desktop → <code>F12</code> → tab <b>Application</b> → <b>Cookies</b> → <code>.x.com</code> → copy <code>auth_token</code>, <code>ct0</code>, <code>twid</code> → paste ke field di bawah → klik <b>Format Otomatis</b>.</li>
+        </ol>
+        <span style="display:block;font-size:11px;opacity:.7;margin-top:6px;">
+          <i class="fas fa-info-circle"></i> Format wajib: <code>auth_token</code> (40-char hex) + <code>ct0</code> (32+ char hex CSRF). <code>twid</code> recommended (format <code>u%3D&lt;userid&gt;</code>).
+        </span>
+        <span class="acc-warn"><i class="fas fa-exclamation-triangle"></i> Twitter rate limit ketat — pakai akun aging (>30 hari). Akun fresh sering ke-flag walau cookie valid.</span>
+      </div>
+    `,
+  },
+};
+
+// Render form fields untuk platform yang dipilih
+function renderAccountForm(platform) {
+  const config = ACC_PLATFORM_FORMS[platform];
+  const container = document.getElementById('acc-form-container');
+  if (!config) {
+    container.innerHTML = '<div class="hint">Platform tidak didukung.</div>';
+    return;
+  }
+
+  const fieldsHtml = config.fields.map(f => {
+    const required = f.required ? 'required' : '';
+    const placeholder = f.placeholder ? `placeholder="${escapeAttr(f.placeholder)}"` : '';
+    if (f.type === 'cookie_textarea') {
+      // Special textarea dengan tombol "Format Otomatis" — parse cookie format apapun
+      // ke JSON yg backend mau. parse_for menentukan key yg di-extract.
+      const parseFor = f.parse_for || 'facebook';
+      return `<div class="form-group">
+        <label>${f.label}${f.required ? ' *' : ''}</label>
+        <textarea name="${f.name}" id="acc-cookie-input" class="acc-textarea" ${required} ${placeholder} style="min-height:130px;"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="parseCookieField('${parseFor}')" style="padding:6px 12px;font-size:12px;">
+            <i class="fas fa-magic"></i> Format Otomatis
+          </button>
+          <span id="acc-cookie-status" style="font-size:11px;opacity:.75;"></span>
+        </div>
+      </div>`;
+    }
+    if (f.type === 'textarea') {
+      return `<div class="form-group">
+        <label>${f.label}${f.required ? ' *' : ''}</label>
+        <textarea name="${f.name}" class="acc-textarea" ${required} ${placeholder}></textarea>
+      </div>`;
+    }
+    return `<div class="form-group">
+      <label>${f.label}${f.required ? ' *' : ''}</label>
+      <input name="${f.name}" type="${f.type}" ${required} ${placeholder}/>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${config.instructions}
+    <form id="acc-form" onsubmit="return submitAccount(event,'${platform}')">
+      ${fieldsHtml}
+      <button type="submit" class="btn btn-primary btn-sm" style="width:100%;margin-top:6px;">
+        <i class="fas fa-plus"></i> Tambah Akun
+      </button>
+    </form>
+  `;
+
+  // TikTok: target field di-disable (selalu ke PC service)
+  const targetSelect = document.getElementById('acc-target');
+  const targetGroup = document.getElementById('acc-target-group');
+  if (platform === 'tiktok') {
+    targetSelect.disabled = true;
+    targetGroup.style.opacity = '0.5';
+    targetGroup.title = 'TikTok selalu ke PC service (tiktok-pc)';
+  } else {
+    targetSelect.disabled = false;
+    targetGroup.style.opacity = '1';
+    targetGroup.title = '';
+  }
+}
+
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;').replace(/\n/g,'&#10;'); }
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// =================================================================
+// COOKIE PARSER — auto-detect format & extract ke JSON
+// =================================================================
+// Support 4 format input:
+//   1. JSON: {"c_user":"...","xs":"..."}
+//   2. DevTools tabel TSV: "c_user\t61572...\t.facebook.com\t/\t..."
+//   3. Netscape cookies.txt: ".facebook.com\tTRUE\t/\tFALSE\t1234\tc_user\t..."
+//   4. Header / EditThisCookie: "c_user=61572...; xs=...; datr=..."
+
+const COOKIE_KEYS = {
+  facebook: { required: ['c_user', 'xs'], optional: ['datr', 'fr', 'sb', 'wd'] },
+  tiktok:   { required: ['sessionid'],    optional: ['ms_token', 'msToken', 'tt_csrf_token', 'tt_chain_token', 'sid_tt', 'ttwid', 'sid_guard'] },
+  // v3 (8 Mei 2026): IG & Twitter sekarang cookie-based.
+  // Required cookies sama dengan REQUIRED_COOKIES di pc-scraper account managers.
+  instagram: { required: ['sessionid', 'ds_user_id'], optional: ['csrftoken', 'rur', 'ig_did', 'mid', 'shbid', 'shbts'] },
+  twitter:   { required: ['auth_token', 'ct0'],       optional: ['twid', 'kdt', 'guest_id', 'personalization_id', 'lang'] },
+};
+
+function parseRawCookies(raw) {
+  // Return: { name: value } untuk semua cookie yg ke-detect, regardless platform
+  const out = {};
+  if (!raw || typeof raw !== 'string') return out;
+  const text = raw.trim();
+  if (!text) return out;
+
+  // Format 1: JSON object
+  if (text.startsWith('{')) {
+    try {
+      const obj = JSON.parse(text);
+      for (const k of Object.keys(obj)) {
+        if (typeof obj[k] === 'string') out[k] = obj[k];
+        else if (obj[k] != null) out[k] = String(obj[k]);
+      }
+      return out;
+    } catch (_) { /* fall through ke parser lain */ }
+  }
+
+  // Format 4: header style "name=value; name2=value2"
+  // Detect: ada "=" dan ";" tapi tidak ada tab/newline (atau cuma sedikit)
+  if (text.includes('=') && text.includes(';') && !text.includes('\t') && text.split('\n').length <= 3) {
+    text.split(/;\s*/).forEach(pair => {
+      const eq = pair.indexOf('=');
+      if (eq > 0) {
+        const name = pair.slice(0, eq).trim();
+        const value = pair.slice(eq + 1).trim();
+        if (name) out[name] = value;
+      }
+    });
+    if (Object.keys(out).length > 0) return out;
+  }
+
+  // Format 2 & 3: line-based TSV
+  const lines = text.split(/\r?\n/).filter(l => l.trim() && !l.trim().startsWith('#'));
+  for (const line of lines) {
+    // Split by tab dulu, kalau gak ada tab pakai whitespace 2+
+    const parts = line.includes('\t') ? line.split('\t') : line.split(/\s{2,}/);
+    if (parts.length < 2) continue;
+
+    // Netscape format: domain | flag | path | secure | expiry | name | value (7 cols)
+    if (parts.length >= 7 && (parts[1] === 'TRUE' || parts[1] === 'FALSE')) {
+      const name = parts[5].trim();
+      const value = parts[6].trim();
+      if (name) out[name] = value;
+      continue;
+    }
+
+    // DevTools tabel: name | value | domain | path | expires | size | ...
+    // Heuristic: kolom pertama = nama cookie (alphanumeric+underscore), kolom kedua = value
+    const name = parts[0].trim();
+    const value = parts[1].trim();
+    // Skip header row & invalid lines
+    if (!name || name.toLowerCase() === 'name' || /\s/.test(name) || !/^[a-zA-Z_][\w\-]*$/.test(name)) continue;
+    out[name] = value;
+  }
+
+  return out;
+}
+
+function buildCookieJson(parsed, platform) {
+  const spec = COOKIE_KEYS[platform];
+  if (!spec) {
+    // Platform tidak terdaftar — return semua yg ke-parse
+    return { json: JSON.stringify(parsed), found: Object.keys(parsed), missing: [] };
+  }
+  const result = {};
+  const found = [];
+  const missing = [];
+  for (const k of spec.required) {
+    if (parsed[k]) { result[k] = parsed[k]; found.push(k); }
+    else missing.push(k);
+  }
+  for (const k of spec.optional) {
+    if (parsed[k]) { result[k] = parsed[k]; found.push(k); }
+  }
+  return { json: JSON.stringify(result), found, missing };
+}
+
+function parseCookieField(platform) {
+  const ta = document.getElementById('acc-cookie-input');
+  const status = document.getElementById('acc-cookie-status');
+  if (!ta) return;
+  const raw = ta.value;
+  if (!raw.trim()) {
+    if (status) status.innerHTML = '<span style="color:#f59e0b;">Field kosong — paste cookie dulu.</span>';
+    return;
+  }
+
+  // v3 (8 Mei 2026): kalau user paste full storage_state JSON (output dari
+  // multi_capture: {"cookies":[...], "origins":[...]}), pass through tanpa
+  // flatten — backend butuh metadata lengkap (expires, httpOnly, localStorage)
+  // untuk inject fidelity. Cuma validate cookies wajib ada.
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('{')) {
+    try {
+      const obj = JSON.parse(trimmed);
+      if (obj && Array.isArray(obj.cookies)) {
+        // Storage_state shape — extract names untuk validasi
+        const names = new Set();
+        for (const c of obj.cookies) {
+          if (c && c.name && c.value) names.add(c.name);
+        }
+        const spec = COOKIE_KEYS[platform];
+        if (spec) {
+          const missing = spec.required.filter(k => !names.has(k));
+          if (missing.length > 0) {
+            if (status) status.innerHTML = `<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> storage_state kekurangan field wajib: <code>${missing.join(', ')}</code>. Login mungkin belum complete saat capture.</span>`;
+            return;
+          }
+        }
+        const nLs = (obj.origins || []).reduce((sum, o) => sum + ((o.localStorage || []).length), 0);
+        if (status) status.innerHTML = `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> storage_state OK — ${obj.cookies.length} cookies, ${nLs} localStorage items. Klik "Tambah Akun" untuk submit.</span>`;
+        return;  // jangan rewrite ta.value — keep storage_state apa adanya
+      }
+    } catch (_) { /* not valid JSON, fall through to flat-dict path */ }
+  }
+
+  const parsed = parseRawCookies(raw);
+  const totalFound = Object.keys(parsed).length;
+  if (totalFound === 0) {
+    if (status) status.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> Format gak ke-detect. Coba paste lagi dari DevTools (Application → Cookies → select all → copy).</span>';
+    return;
+  }
+
+  const { json, found, missing } = buildCookieJson(parsed, platform);
+
+  if (missing.length > 0) {
+    if (status) status.innerHTML = `<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> Hilang field wajib: <code>${missing.join(', ')}</code>. Pastiin login dulu di browser sebelum copy cookie.</span>`;
+    // Tetap replace, supaya user bisa lihat apa yg ke-detect
+    ta.value = json;
+    return;
+  }
+
+  ta.value = json;
+  if (status) status.innerHTML = `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Berhasil — ${found.length} cookie ke-extract: <code>${found.join(', ')}</code></span>`;
+}
+
+// Submit add-account form
+async function submitAccount(e, platform) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = { platform };
+  for (const [k, v] of fd.entries()) {
+    if (v !== '') payload[k] = v;
+  }
+
+  // Auto-parse cookie kalau platform pakai cookie-textarea & user lupa klik
+  // "Format Otomatis" (atau sengaja paste JSON langsung — biar parser jadi no-op).
+  // v3 (8 Mei 2026): IG & Twitter sekarang juga cookie-based, masuk pool yg sama.
+  const COOKIE_PLATFORMS = ['facebook', 'tiktok', 'instagram', 'twitter'];
+  if (COOKIE_PLATFORMS.includes(platform) && payload.password) {
+    const trimmed = payload.password.trim();
+    // Skip parse kalau user paste storage_state full JSON (deteksi: dict
+    // dengan key 'cookies' bertipe array). Backend parser handle native.
+    let isStorageState = false;
+    if (trimmed.startsWith('{')) {
+      try {
+        const obj = JSON.parse(trimmed);
+        if (obj && Array.isArray(obj.cookies)) {
+          isStorageState = true;
+        }
+      } catch (_) { /* not valid JSON, fall through to flat-dict path */ }
+    }
+
+    if (!trimmed.startsWith('{') && !isStorageState) {
+      const parsed = parseRawCookies(trimmed);
+      const { json, missing } = buildCookieJson(parsed, platform);
+      if (missing.length > 0) {
+        toast('error', 'Cookie kurang lengkap', `Field wajib hilang: ${missing.join(', ')}. Klik "Format Otomatis" buat lihat detail, atau login ulang di browser.`);
+        return false;
+      }
+      payload.password = json;
+      // Update field display juga supaya user lihat hasilnya
+      const ta = document.getElementById('acc-cookie-input');
+      if (ta) ta.value = json;
+    }
+  }
+
+  // Tambah target kalau bukan tiktok dan user pilih HP spesifik
+  if (platform !== 'tiktok') {
+    const targetSel = document.getElementById('acc-target');
+    if (targetSel.value) payload.target = targetSel.value;
+  }
+
+  const btn = e.target.querySelector('button[type=submit]');
+  const originalLabel = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menambahkan...';
+
+  try {
+    const r = await fetch(`${API}/accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const msg = data.error || data.detail || `HTTP ${r.status}`;
+      throw new Error(msg);
+    }
+    toast('success', 'Akun ditambahkan', `${payload.username} berhasil di-register di ${platform}`);
+    e.target.reset();
+    loadAccountsList();
+  } catch (err) {
+    toast('error', 'Gagal tambah akun', err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalLabel;
+  }
+  return false;
+}
+
+// Load list akun dari /api/accounts dan render tabel
+async function loadAccountsList() {
+  const empty = document.getElementById('acc-empty');
+  const table = document.getElementById('acc-table');
+  const tbody = document.getElementById('acc-tbody');
+  const errBadge = document.getElementById('acc-error-badge');
+
+  empty.style.display = 'block';
+  empty.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="font-size:18px;display:block;margin-bottom:6px;"></i>Memuat daftar akun...';
+  table.style.display = 'none';
+  errBadge.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/accounts`, { headers: authHeaders() });
+    const data = await r.json();
+
+    // Show error badge kalau ada source yg gagal
+    if (data.errors && data.errors.length) {
+      errBadge.style.display = 'inline-block';
+      errBadge.textContent = `⚠ ${data.errors.length} source error`;
+      errBadge.title = data.errors.map(e => `${e.source}: ${e.error}`).join('\n');
+    }
+
+    // Refresh target dropdown dari sources.android
+    if (data.sources?.android) {
+      const sel = document.getElementById('acc-target');
+      const currentVal = sel.value;
+      sel.innerHTML = '<option value="">— HP pertama dari pool —</option>' +
+        data.sources.android.map(u => `<option value="${escapeAttr(u)}">${escapeHtml(u)}</option>`).join('');
+      sel.value = currentVal;
+    }
+
+    // Flatten + render
+    const rows = [];
+    for (const [platform, accounts] of Object.entries(data.accounts || {})) {
+      for (const acc of (accounts || [])) {
+        rows.push({ platform, ...acc });
+      }
+    }
+
+    if (rows.length === 0) {
+      empty.innerHTML = '<i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:6px;opacity:0.4;"></i>Belum ada akun terdaftar. Tambah lewat form di atas.';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const status = String(r.status || 'unknown').toLowerCase();
+      const sourceShort = (r._source || '').replace(/^https?:\/\//, '');
+      const lastUsed = r.last_used ? new Date(r.last_used).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+      const safeUser = encodeURIComponent(r.username);
+      const safePlat = encodeURIComponent(r.platform);
+      const reactivateBtn = (status === 'active')
+        ? ''
+        : `<button class="btn btn-outline" onclick="reactivateAccount('${r.platform}','${safeUser}','${escapeAttr(r._source||'')}')" title="Reactivate"><i class="fas fa-undo"></i></button>`;
+      return `
+        <tr>
+          <td><span class="acc-badge acc-badge-${r.platform}">${r.platform}</span></td>
+          <td>
+            <div style="font-weight:600;">${escapeHtml(r.username)}</div>
+            <small>last used: ${lastUsed}</small>
+          </td>
+          <td><span class="acc-status acc-status-${status}">${status}</span></td>
+          <td><small title="${escapeAttr(r._source||'')}">${escapeHtml(sourceShort || r._source_type || '—')}</small></td>
+          <td>
+            <div class="acc-actions">
+              ${reactivateBtn}
+              <button class="btn btn-danger" onclick="deleteAccount('${r.platform}','${safeUser}','${escapeAttr(r._source||'')}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+  } catch (err) {
+    empty.innerHTML = `<i class="fas fa-exclamation-circle" style="color:var(--red);font-size:18px;display:block;margin-bottom:6px;"></i>Gagal load: ${escapeHtml(err.message)}`;
+  }
+}
+
+async function deleteAccount(platform, usernameEnc, source) {
+  const username = decodeURIComponent(usernameEnc);
+  if (!confirm(`Hapus akun ${platform}: ${username}?\n\nSession/cookie akan dihapus permanen.`)) return;
+  try {
+    const url = source && platform !== 'tiktok'
+      ? `${API}/accounts/${platform}/${usernameEnc}?target=${encodeURIComponent(source)}`
+      : `${API}/accounts/${platform}/${usernameEnc}`;
+    const r = await fetch(url, { method: 'DELETE', headers: authHeaders() });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    toast('success', 'Akun dihapus', `${platform}:${username}`);
+    loadAccountsList();
+  } catch (err) {
+    toast('error', 'Gagal hapus', err.message);
+  }
+}
+
+async function reactivateAccount(platform, usernameEnc, source) {
+  const username = decodeURIComponent(usernameEnc);
+  try {
+    const r = await fetch(`${API}/accounts/${platform}/${usernameEnc}/reactivate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(source && platform !== 'tiktok' ? { target: source } : {}),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    toast('success', 'Reactivated', `${platform}:${username} → ${data.status || 'active'}`);
+    loadAccountsList();
+  } catch (err) {
+    toast('error', 'Gagal reactivate', err.message);
+  }
+}
+
+// Entry point — buka modal + init form + load list
+function openAccountsModal() {
+  openModal('modal-accounts');
+  // Idempotent: render form pertama kali, atau pakai value yang sudah dipilih
+  const sel = document.getElementById('acc-platform');
+  renderAccountForm(sel.value || 'instagram');
+  loadAccountsList();
+}
+
+// Wire up platform selector (sekali aja)
+document.getElementById('acc-platform').addEventListener('change', (e) => {
+  renderAccountForm(e.target.value);
+});
+
+// =================================================================
+// COMMAND CENTER (Fase 3-5) — Launcher Modal
+// =================================================================
+async function openCommandCenterModal() {
+  // Populate project dropdown dari API (selalu fresh)
+  const sel = document.getElementById('cc-project-input');
+  if (sel) {
+    sel.innerHTML = '<option value="" style="background:var(--bg-2);color:var(--text);">— semua data, tanpa filter project —</option>';
+    try {
+      let list = [];
+      try {
+        const r = await fetch(`${API}/projects`);
+        list = await r.json();
+      } catch (_) {
+        list = Array.isArray(projects) ? projects : [];
+      }
+      for (const p of list) {
+        const opt = document.createElement('option');
+        opt.value = p._id || p.id;
+        opt.textContent = p.name;
+        // Force dark theme styling — option element ngikut OS default kalau gak di-set explicit
+        opt.style.background = 'var(--bg-2)';
+        opt.style.color = 'var(--text)';
+        sel.appendChild(opt);
+      }
+    } catch (e) { console.warn('cc: failed to load projects', e); }
+  }
+  openModal('modal-command-center');
+}
+window.openCommandCenterModal = openCommandCenterModal;
+
+function buildMonitorUrl(monitorId) {
+  const kw = document.getElementById('cc-keyword-input')?.value.trim() || '';
+  const proj = document.getElementById('cc-project-input')?.value || '';
+  const token = localStorage.getItem('slaytics_token') || (typeof authToken !== 'undefined' ? authToken : '');
+
+  // M6 = AI Chat → file standalone karena unique (JARVIS voice + alert banner + news/viral panel)
+  if (monitorId === 6) {
+    const params = new URLSearchParams();
+    params.set('monitor_id', '6');
+    if (kw) params.set('keyword', kw);
+    if (proj) params.set('project_id', proj);
+    if (token) params.set('token', token);
+    return `/command-center/ai-chat.html?${params}`;
+  }
+
+  // M1-M5 → reuse page utama (index.html) dengan fullscreen mode + auto-navigate ke view tertentu.
+  // Ini bikin Locations Map (Leaflet) dan view lain yang udah di-build di page utama langsung kepakai
+  // tanpa duplicate code di file standalone.
+  const view = ['', 'dashboard', 'analysis', 'mentions', 'sna', 'locations'][monitorId];
+  if (!view) return null;
+  const params = new URLSearchParams();
+  params.set('monitor_id', String(monitorId));
+  params.set('view', view);
+  params.set('fullscreen', '1');
+  if (kw) params.set('keyword', kw);
+  if (proj) params.set('project_id', proj);
+  if (token) params.set('token', token);
+  return `/?${params}`;
+}
+
+function openMonitor(monitorId) {
+  const url = buildMonitorUrl(monitorId);
+  if (!url) { toast('error', 'Invalid', 'Monitor ID tidak valid'); return; }
+  window.open(url, `slaytics_m${monitorId}`, 'noopener,noreferrer');
+}
+window.openMonitor = openMonitor;
+
+function openAllMonitors() {
+  for (let i = 1; i <= 6; i++) {
+    setTimeout(() => openMonitor(i), (i - 1) * 250);
+  }
+  toast('success', 'Command Center', '6 monitor terbuka — atur posisi di tiap layar');
+}
+window.openAllMonitors = openAllMonitors;
+
 // Check if user is already logged in
 if (!checkAuth()) {
   // Show login screen
   document.getElementById('login-screen').style.display = 'flex';
 } else {
-  loadToken();
   loadORToken();
   loadAndroidUrls();
 }

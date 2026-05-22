@@ -1,0 +1,5 @@
+Flask>=3.0,<4.0
+TikTokApi>=7.0,<8.0
+# CRITICAL: pin EXACT version match dengan base image Dockerfile (v1.47.0).
+# Kalau ganti base image, MUST ganti juga di sini ke versi yang sama.
+playwright==1.55.0

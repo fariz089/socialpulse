@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Slaytics M6 — JARVIS</title>
+<link rel="stylesheet" href="cc-common.css">
+<script src="cc-common.js" defer></script>
+<style>
+  body { display:grid; grid-template-rows:auto 1fr auto; height:100vh; }
+  #cc-main {
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px 14px; overflow:hidden;
+  }
+  .col { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+  .col-title {
+    font-size:11px; letter-spacing:1px; text-transform:uppercase; opacity:.5; margin-bottom:8px; flex-shrink:0;
+  }
+  .scroll-area { flex:1; overflow-y:auto; }
+  #ai-input-bar {
+    flex-shrink:0; padding:10px 14px; border-top:1px solid rgba(255,255,255,.08); display:flex; gap:8px;
+    align-items:center; background:#0a0e14;
+  }
+  #ai-cmd {
+    flex:1; padding:12px 14px; border-radius:8px; border:1px solid rgba(255,255,255,.1);
+    background:#111a26; color:#e6e8eb; font-size:14px; outline:none;
+  }
+  #ai-cmd:focus { border-color:#3b82f6; }
+  .btn {
+    padding:12px 16px; border-radius:8px; border:0; background:#3b82f6; color:#fff; font-weight:600;
+    cursor:pointer; font-size:14px;
+  }
+  .btn:hover { background:#2563eb; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-icon { width:44px; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  #btn-mic.listening { background:#ef4444; animation:pulse 1.5s infinite; }
+  #btn-voice.active { background:#10b981; }
+  #btn-tts.muted { background:#374151; opacity:.6; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+  .ai-msg {
+    padding:10px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5;
+  }
+  .ai-msg.user { background:#1e3a8a; }
+  .ai-msg.assistant { background:#111a26; border-left:3px solid #10b981; }
+  .ai-msg.system { background:#3a1a1a; border-left:3px solid #ef4444; font-family:ui-monospace,monospace; font-size:11px; opacity:.85; }
+  .ai-msg .role { font-size:11px; opacity:.6; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px; }
+  .news-item, .viral-item {
+    padding:10px 12px; border-radius:6px; background:#111a26; margin-bottom:8px; font-size:12px;
+  }
+
+  /* Alert banner (critical_alert dari backend) */
+  #alert-banner {
+    position:fixed; top:60px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#dc2626,#991b1b);
+    color:#fff; padding:14px 22px; border-radius:10px;
+    font-weight:600; font-size:14px; z-index:9999;
+    box-shadow:0 8px 28px rgba(220,38,38,.55);
+    border:1px solid rgba(255,255,255,.2);
+    max-width:min(90vw,720px); display:none;
+    animation:alertSlide .35s cubic-bezier(.2,.9,.3,1.1);
+  }
+  #alert-banner.high   { background:linear-gradient(135deg,#ea580c,#9a3412); }
+  #alert-banner.medium { background:linear-gradient(135deg,#ca8a04,#854d0e); }
+  #alert-banner .alert-title { font-size:12px; opacity:.85; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+  #alert-banner .alert-close {
+    position:absolute; top:6px; right:10px; cursor:pointer; opacity:.7; font-size:18px; line-height:1;
+  }
+  @keyframes alertSlide {
+    from { opacity:0; transform:translate(-50%,-20px); }
+    to   { opacity:1; transform:translate(-50%,0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-banner">
+  <span class="alert-close" onclick="document.getElementById('alert-banner').style.display='none'">×</span>
+  <div class="alert-title" id="alert-banner-title">⚠️ ALERT</div>
+  <div id="alert-banner-body"></div>
+</div>
+
+<main id="cc-main">
+  <!-- Left: AI Chat -->
+  <div class="col cc-card" style="margin-bottom:0;">
+    <div class="col-title">
+      JARVIS — AI Chat
+      <span style="float:right;font-size:10px;opacity:.4;" id="status-text">idle</span>
+    </div>
+    <div id="chat-log" class="scroll-area">
+      <div style="opacity:.5;font-size:13px;text-align:center;padding:40px 20px;" id="placeholder-msg">
+        Ketik perintah atau aktifkan voice mode (🎙️). Coba: <em>"tampilkan msglow"</em>, <em>"ada negatif apa hari ini?"</em>, <em>"briefing pagi"</em>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: News + Viral split -->
+  <div class="col" style="display:grid;grid-template-rows:1fr 1fr;gap:12px;">
+    <div class="cc-card" style="margin:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+      <div class="col-title">📰 Trending News</div>
+      <div id="news-feed" class="scroll-area">
+        <div style="opacity:.4;text-align:center;padding:20px;font-size:13px;">menunggu data…</div>
+      </div>
+    </div>
+    <div class="cc-card" style="margin:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+      <div class="col-title">🔥 Viral Posts</div>
+      <div id="viral-feed" class="scroll-area">
+        <div style="opacity:.4;text-align:center;padding:20px;font-size:13px;">menunggu data…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="ai-input-bar">
+  <input id="ai-cmd" placeholder="Ketik perintah… (Enter untuk kirim, Shift+Enter newline)" autocomplete="off">
+  <button id="btn-mic" class="btn btn-icon" title="Sekali tekan untuk voice command">🎤</button>
+  <button id="btn-voice" class="btn btn-icon" title="Voice mode hands-free (always-on)">🎙️</button>
+  <button id="btn-tts" class="btn btn-icon" title="Mute/unmute suara JARVIS">🔊</button>
+  <button id="btn-send" class="btn">Kirim</button>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  if (!CC.requireMonitorId()) return;
+  CC.injectHeader('MONITOR 6 — JARVIS');
+
+  const chatLog = document.getElementById('chat-log');
+  const cmdInput = document.getElementById('ai-cmd');
+  const btnSend = document.getElementById('btn-send');
+  const btnMic = document.getElementById('btn-mic');
+  const btnVoice = document.getElementById('btn-voice');
+  const btnTts = document.getElementById('btn-tts');
+  const placeholder = document.getElementById('placeholder-msg');
+  const statusText = document.getElementById('status-text');
+
+  // ─── State ──────────────────────────────────────────────────────────
+  let ttsEnabled = true;             // Suara JARVIS aktif?
+  let voiceModeActive = false;       // Hands-free mode (continuous listening)?
+  let currentRec = null;             // SpeechRecognition instance saat ini
+  let speakingNow = false;           // Lagi ngomong? Pause mic supaya tidak loop
+  let preferredVoice = null;         // Voice TTS terpilih (id-ID)
+
+  function setStatus(s) { statusText.textContent = s; }
+
+  // ─── TTS ────────────────────────────────────────────────────────────
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return null;
+    // Prefer female id-ID, fallback id, fallback en
+    return voices.find(v => v.lang === 'id-ID' && /female|wanita/i.test(v.name))
+        || voices.find(v => v.lang === 'id-ID')
+        || voices.find(v => v.lang.startsWith('id'))
+        || voices.find(v => v.lang.startsWith('en'))
+        || voices[0];
+  }
+  if ('speechSynthesis' in window) {
+    speechSynthesis.onvoiceschanged = () => { preferredVoice = pickVoice(); };
+    preferredVoice = pickVoice();
+  }
+
+  function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return (tmp.textContent || tmp.innerText || '').trim();
+  }
+
+  function speak(text, opts = {}) {
+    if (!ttsEnabled || !text || !('speechSynthesis' in window)) return;
+    // Jangan baca metadata "(N iter · X ms · Y tokens)"
+    const clean = String(text).replace(/\(\d+\s*iter\s*·\s*\d+ms\s*·\s*\d+\s*tokens\)/g, '').trim();
+    if (!clean) return;
+
+    speechSynthesis.cancel(); // hentikan utterance sebelumnya
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = opts.lang || 'id-ID';
+    u.rate = opts.rate || 1.05;
+    u.pitch = opts.pitch || 0.95;
+    if (preferredVoice) u.voice = preferredVoice;
+
+    speakingNow = true;
+    setStatus('speaking…');
+    // Pause mic kalau lagi voice mode supaya tidak self-loop
+    if (currentRec && voiceModeActive) {
+      try { currentRec.abort(); } catch {}
+    }
+    u.onend = () => {
+      speakingNow = false;
+      setStatus(voiceModeActive ? 'listening…' : 'idle');
+      // Resume mic 800ms setelah selesai bicara
+      if (voiceModeActive) {
+        setTimeout(() => { if (voiceModeActive && !speakingNow) startVoiceLoop(); }, 800);
+      }
+    };
+    u.onerror = () => { speakingNow = false; setStatus('idle'); };
+    speechSynthesis.speak(u);
+  }
+
+  function toggleTts() {
+    ttsEnabled = !ttsEnabled;
+    btnTts.classList.toggle('muted', !ttsEnabled);
+    btnTts.textContent = ttsEnabled ? '🔊' : '🔇';
+    if (!ttsEnabled) speechSynthesis.cancel();
+    CC.toast('info', ttsEnabled ? 'Suara JARVIS aktif' : 'Suara JARVIS dimatikan');
+  }
+  btnTts.addEventListener('click', toggleTts);
+
+  // ─── Append message ─────────────────────────────────────────────────
+  function appendMsg(role, text) {
+    if (placeholder && placeholder.parentNode) placeholder.remove();
+    const e = document.createElement('div');
+    e.className = `ai-msg ${role}`;
+    e.innerHTML = `<div class="role">${role}</div><div>${text}</div>`;
+    chatLog.appendChild(e);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return e;
+  }
+
+  // ─── Greeting saat boot ─────────────────────────────────────────────
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 11) return 'Selamat pagi';
+    if (h < 15) return 'Selamat siang';
+    if (h < 18) return 'Selamat sore';
+    return 'Selamat malam';
+  }
+  function bootGreeting() {
+    const greet = `${getGreeting()}, Bos. Sistem online. 6 monitor siap. Silakan beri perintah.`;
+    appendMsg('assistant', greet);
+    // Speak setelah delay kecil supaya voices keburu loaded
+    setTimeout(() => speak(greet), 600);
+  }
+
+  // ─── Send command ───────────────────────────────────────────────────
+  async function sendCommand(cmdOverride) {
+    const cmd = (cmdOverride || cmdInput.value).trim();
+    if (!cmd) return;
+    cmdInput.value = '';
+    appendMsg('user', cmd);
+    btnSend.disabled = true;
+    setStatus('thinking…');
+    const thinking = appendMsg('assistant', '<em>thinking…</em>');
+
+    try {
+      const data = await CC.api('/api/agent/command', {
+        method: 'POST',
+        body: JSON.stringify({ command: cmd, project_id: CC.projectId || null }),
+      });
+      thinking.remove();
+      const finalMsg = data.final_message || '(no response)';
+      const meta = `<div style="font-size:10px;opacity:.4;margin-top:6px;">${data.iterations} iter · ${data.duration_ms}ms · ${data.usage?.total_tokens || '?'} tokens</div>`;
+      appendMsg('assistant', finalMsg.replace(/\n/g, '<br>') + meta);
+      // Bacakan dengan TTS
+      speak(stripHtml(finalMsg));
+    } catch (e) {
+      thinking.remove();
+      appendMsg('system', `Error: ${e.message}`);
+      CC.toast('error', e.message);
+      setStatus('error');
+    } finally {
+      btnSend.disabled = false;
+      cmdInput.focus();
+    }
+  }
+
+  btnSend.addEventListener('click', () => sendCommand());
+  cmdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendCommand();
+    }
+  });
+
+  // ─── Single-shot mic (tombol 🎤) ────────────────────────────────────
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    btnMic.addEventListener('click', () => {
+      if (btnMic.classList.contains('listening')) {
+        if (currentRec) try { currentRec.stop(); } catch {}
+        btnMic.classList.remove('listening');
+        return;
+      }
+      const rec = new SR();
+      rec.lang = 'id-ID';
+      rec.continuous = false;
+      rec.interimResults = false;
+      currentRec = rec;
+      try {
+        rec.start();
+        btnMic.classList.add('listening');
+        setStatus('listening…');
+      } catch (e) { CC.toast('error', e.message); }
+      rec.onresult = (e) => {
+        const t = e.results[0][0].transcript;
+        cmdInput.value = t;
+        btnMic.classList.remove('listening');
+        sendCommand();
+      };
+      rec.onerror = (e) => {
+        btnMic.classList.remove('listening');
+        if (e.error !== 'aborted' && e.error !== 'no-speech') CC.toast('error', `Mic: ${e.error}`);
+      };
+      rec.onend = () => btnMic.classList.remove('listening');
+    });
+  } else {
+    btnMic.disabled = true;
+    btnMic.title = 'Browser tidak support Web Speech';
+    btnMic.style.opacity = '0.4';
+    btnVoice.disabled = true;
+    btnVoice.style.opacity = '0.4';
+  }
+
+  // ─── Voice mode hands-free dengan wake word ─────────────────────────
+  // Continuous listening — kalau detect "jarvis" / "slaytics" + perintah, langsung send.
+  // Untuk menghindari self-trigger saat TTS bicara, mic di-abort selama speakingNow=true.
+  const WAKE_WORDS = ['jarvis', 'slaytics', 'jervis', 'hey jarvis', 'hai jarvis'];
+
+  function startVoiceLoop() {
+    if (!voiceModeActive || speakingNow) return;
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = 'id-ID';
+    rec.continuous = true;
+    rec.interimResults = false;
+    currentRec = rec;
+    try {
+      rec.start();
+      setStatus('listening…');
+    } catch (e) {
+      // start() lempar error kalau already-started — abaikan
+      console.warn('rec start:', e.message);
+    }
+
+    rec.onresult = (e) => {
+      const last = e.results[e.results.length - 1];
+      if (!last || !last.isFinal) return;
+      const transcript = last[0].transcript.trim().toLowerCase();
+      if (!transcript) return;
+
+      // Cek wake word
+      const wakeHit = WAKE_WORDS.find(w => transcript.includes(w));
+      if (!wakeHit) {
+        // No wake word — abaikan (continuous listening tetap jalan)
+        return;
+      }
+
+      // Strip wake word, ambil command setelahnya
+      const idx = transcript.indexOf(wakeHit);
+      let command = transcript.slice(idx + wakeHit.length).trim();
+      // Hilangkan koma/titik di awal
+      command = command.replace(/^[\s,.\-]+/, '');
+
+      if (!command) {
+        // Cuma manggil "jarvis" tanpa command
+        speak('Iya Bos, ada perintah?');
+        return;
+      }
+
+      // Hentikan rec, kirim command, nanti onend yang restart loop
+      try { rec.stop(); } catch {}
+      cmdInput.value = command;
+      sendCommand(command);
+    };
+
+    rec.onerror = (e) => {
+      if (e.error === 'aborted' || e.error === 'no-speech') return;
+      console.warn('voice loop error:', e.error);
+    };
+
+    rec.onend = () => {
+      // Auto-restart selama voice mode aktif & tidak lagi bicara
+      currentRec = null;
+      if (voiceModeActive && !speakingNow) {
+        setTimeout(() => startVoiceLoop(), 250);
+      }
+    };
+  }
+
+  function toggleVoiceMode() {
+    voiceModeActive = !voiceModeActive;
+    btnVoice.classList.toggle('active', voiceModeActive);
+    if (voiceModeActive) {
+      CC.toast('info', 'Voice mode aktif. Panggil "Jarvis" diikuti perintah.');
+      speak('Voice mode aktif. Panggil saya kapan saja.');
+      // startVoiceLoop akan dipanggil oleh speak.onend
+    } else {
+      if (currentRec) try { currentRec.abort(); } catch {}
+      currentRec = null;
+      setStatus('idle');
+      CC.toast('info', 'Voice mode dimatikan');
+    }
+  }
+  btnVoice.addEventListener('click', toggleVoiceMode);
+
+  // ─── News + Viral receivers ─────────────────────────────────────────
+  function renderNews(items) {
+    if (!items?.length) {
+      document.getElementById('news-feed').innerHTML = '<div style="opacity:.4;padding:20px;text-align:center;">no news</div>';
+      return;
+    }
+    document.getElementById('news-feed').innerHTML = items.map(n => `
+      <a class="news-item" href="${n.url || '#'}" target="_blank" style="display:block;text-decoration:none;color:inherit;">
+        <div style="font-weight:600;margin-bottom:4px;">${(n.content || n.author || 'Untitled').slice(0, 120)}</div>
+        <div style="opacity:.5;font-size:11px;">${n.source_name || ''} · ${n.post_date ? new Date(n.post_date).toLocaleString() : ''}</div>
+      </a>
+    `).join('');
+  }
+
+  function renderViral(items) {
+    if (!items?.length) {
+      document.getElementById('viral-feed').innerHTML = '<div style="opacity:.4;padding:20px;text-align:center;">no viral</div>';
+      return;
+    }
+    document.getElementById('viral-feed').innerHTML = items.map(v => `
+      <div class="viral-item">
+        <div style="font-weight:600;font-size:12px;margin-bottom:4px;">@${v.handle || v.author || '?'} · ${v.platform}</div>
+        <div style="font-size:12px;opacity:.85;">${(v.content || '').slice(0, 140)}</div>
+        <div style="font-size:10px;opacity:.5;margin-top:4px;">
+          ❤${CC.fmt(v.likes)} · 💬${CC.fmt(v.comments)} · 👁${CC.fmt(v.views)} · 🔥${CC.fmt(v.engagement)}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ─── Alert banner (dari notifier.js / alerts.js di backend) ─────────
+  function showAlertBanner(alert) {
+    const banner = document.getElementById('alert-banner');
+    const body = document.getElementById('alert-banner-body');
+    const title = document.getElementById('alert-banner-title');
+    const sev = (alert.severity || 'medium').toLowerCase();
+    banner.className = '';
+    banner.classList.add(sev);
+    title.textContent = `${sev.toUpperCase()} — ${alert.type || 'alert'}`;
+    body.innerHTML = `
+      <div style="margin-top:4px;">${alert.message || alert.summary || JSON.stringify(alert).slice(0, 200)}</div>
+      ${alert.keyword ? `<div style="margin-top:6px;font-size:12px;opacity:.85;">Keyword: <b>${alert.keyword}</b></div>` : ''}
+    `;
+    banner.style.display = 'block';
+
+    // Voice alert
+    const sevID = sev === 'critical' ? 'CRITICAL' : sev === 'high' ? 'HIGH' : 'PERHATIAN';
+    const spoken = `Bos, alert ${sevID}. ${alert.message || alert.summary || ''}`;
+    speak(spoken);
+
+    // Auto-hide after 30s untuk medium, manual close untuk critical/high
+    if (sev === 'medium' || sev === 'low') {
+      setTimeout(() => { banner.style.display = 'none'; }, 30000);
+    }
+  }
+
+  // ─── WebSocket setup ────────────────────────────────────────────────
+  const ws = new CC.SlayticsWS(CC.monitorId);
+  CC.injectStatusPill(ws);
+  ws.on('render', (msg) => {
+    if (msg.view === 'news') renderNews(msg.payload?.items || msg.payload || []);
+    else if (msg.view === 'viral') renderViral(msg.payload?.items || msg.payload || []);
+    else if (msg.view === 'ai-chat' && msg.payload?.news) renderNews(msg.payload.news);
+    else if (msg.view === 'ai-chat' && msg.payload?.viral) renderViral(msg.payload.viral);
+  });
+  ws.on('scrape_progress', (msg) => {
+    appendMsg('system', `[${msg.platform}] ${msg.status}${msg.inserted ? ` (+${msg.inserted})` : ''}${msg.error ? ` — ${msg.error}` : ''}`);
+  });
+  // Critical alert dari notifier.js (24/7 monitoring)
+  ws.on('critical_alert', (msg) => {
+    if (Array.isArray(msg.alerts)) {
+      msg.alerts.forEach(a => showAlertBanner({ ...a, keyword: msg.keyword }));
+    } else {
+      showAlertBanner(msg);
+    }
+  });
+  ws.connect();
+
+  // Auto-load news + viral di panel kanan saat boot
+  CC.fetchMonitorData().then(d => {
+    if (d?.news) renderNews(d.news);
+    if (d?.viral_posts) renderViral(d.viral_posts);
+  });
+  CC.autoRefreshOnSchedulerComplete(ws, (d) => {
+    if (d?.news) renderNews(d.news);
+    if (d?.viral_posts) renderViral(d.viral_posts);
+  });
+
+  cmdInput.focus();
+
+  // Greeting jalan setelah 1 detik biar voices keburu loaded
+  setTimeout(bootGreeting, 1000);
+});
+</script>
+</body>
+</html>

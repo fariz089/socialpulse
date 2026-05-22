@@ -1,0 +1,121 @@
+/* command-center/cc-common.css */
+/* Theme dark untuk multi-monitor display — tinggi kontras, tinggi info-density */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0e14;
+  color: #e6e8eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#cc-header {
+  flex-shrink: 0;
+}
+
+main, #cc-main {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 18px;
+}
+
+/* Cards */
+.cc-card {
+  background: #0f1620;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.cc-card-title {
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  opacity: .55;
+  margin-bottom: 8px;
+}
+
+/* Big number */
+.cc-bignum {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.cc-bignum-label { font-size: 12px; opacity: .55; margin-top: 4px; }
+
+/* Grid */
+.cc-grid { display: grid; gap: 12px; }
+.cc-grid-2 { grid-template-columns: 1fr 1fr; }
+.cc-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* Pill */
+.cc-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: rgba(255,255,255,.08);
+}
+.cc-pill-pos { background: rgba(16,185,129,.18); color: #34d399; }
+.cc-pill-neg { background: rgba(239,68,68,.18); color: #f87171; }
+.cc-pill-neu { background: rgba(148,163,184,.18); color: #cbd5e1; }
+
+/* Table */
+.cc-table { width: 100%; border-collapse: collapse; }
+.cc-table th, .cc-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.cc-table th { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: .5; font-weight: 500; }
+.cc-table tr:hover td { background: rgba(255,255,255,.02); }
+
+/* Avatar */
+.cc-avatar {
+  width: 32px; height: 32px; border-radius: 999px; object-fit: cover;
+  background: #1a2230; vertical-align: middle;
+}
+
+/* Mention card */
+.cc-mention {
+  padding: 10px 12px; border-radius: 8px; background: #111a26;
+  border-left: 3px solid #3b82f6; margin-bottom: 8px;
+}
+.cc-mention .cc-mention-head {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 12px; opacity: .8;
+}
+.cc-mention .cc-mention-body { font-size: 13px; line-height: 1.5; }
+.cc-mention .cc-mention-meta { font-size: 11px; opacity: .5; margin-top: 6px; display: flex; gap: 12px; }
+.cc-mention.pos { border-left-color: #10b981; }
+.cc-mention.neg { border-left-color: #ef4444; }
+.cc-mention.neu { border-left-color: #94a3b8; }
+
+/* Loading skeleton */
+.cc-skel {
+  background: linear-gradient(90deg, #111a26 25%, #182232 50%, #111a26 75%);
+  background-size: 200% 100%;
+  animation: cc-skel 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes cc-skel {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }

@@ -1,3 +1,9 @@
+# docker-compose.yml — Slaytics command center
+#
+# Konfigurasi runtime (OpenRouter, Telegram, Discord, scheduler interval, alert
+# thresholds, dll) sekarang ada di MongoDB collection `app_settings`, atur lewat
+# UI Settings di http://localhost. File ini cuma berisi variabel technical-required.
+
 version: "3.8"
 
 services:
@@ -13,6 +19,8 @@ services:
       - MONGO_INITDB_DATABASE=slaytics
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-slaytics_admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}
+    networks:
+      - slaytics-net
 
   backend:
     build: ./backend
@@ -21,13 +29,26 @@ services:
       - "${API_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
-      - MONGO_URI=mongodb://${MONGO_USERNAME:-slaytics_admin}:${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}@mongo:27017
+      - MONGO_URI=mongodb://${MONGO_USERNAME:-slaytics_admin}:${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}@43.157.205.200:27017
       - DB_NAME=slaytics
       - JWT_SECRET=${JWT_SECRET:-slaytics-jwt-secret-change-in-production}
       - PORT=3001
+      # Internal docker network defaults (boleh override dari UI Settings)
+      - PC_SCRAPER_URL=http://pc-scraper:5005
+      - TIKTOK_PC_URL=http://tiktok-pc:5006
+      # ─── Optional auto-migrate dari env ke DB saat first boot ───
+      # Setelah migrate, edit lewat UI Settings. Variabel ini diabaikan.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
     depends_on:
       - mongo
+      - pc-scraper
+      - tiktok-pc
     restart: unless-stopped
+    networks:
+      - slaytics-net
 
   frontend:
     build: ./frontend
@@ -37,6 +58,46 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - slaytics-net
+
+  pc-scraper:
+    build: ./pc-scraper
+    container_name: slaytics-pc-scraper
+    ports:
+      - "${PC_SCRAPER_PORT:-5005}:5005"
+    environment:
+      - PORT=5005
+      - HOST=0.0.0.0
+      - TIKTOK_REMOTE_URL=http://tiktok-pc:5006
+      - FB_SCRAPER_DEBUG=1 
+    volumes:
+      - pc_scraper_data:/data
+    restart: unless-stopped
+    networks:
+      - slaytics-net
+
+  tiktok-pc:
+    build: ./tiktok-pc
+    container_name: slaytics-tiktok-pc
+    ports:
+      - "${TIKTOK_PC_PORT:-5006}:5006"
+    environment:
+      - PORT=5006
+      - HOST=0.0.0.0
+      - DATA_DIR=/data
+    volumes:
+      - tiktok_pc_data:/data
+    shm_size: '1gb'
+    restart: unless-stopped
+    networks:
+      - slaytics-net
 
 volumes:
   mongo_data:
+  pc_scraper_data:
+  tiktok_pc_data:
+
+networks:
+  slaytics-net:
+    driver: bridge
