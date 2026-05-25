@@ -613,6 +613,59 @@ function sanitizeKeywords(input) {
     .filter(k => k.length > 0);
 }
 
+// ===== RELEVANCE FILTER (Backend safety net) =====
+// Platform search sering return "recommended/suggested" posts yang tidak
+// mengandung keyword (contoh: Cristiano Ronaldo di search "juragan99").
+// Filter ini jadi safety net selain filter di frontend.
+//
+// Return true kalau post relevan, false kalau harus dibuang.
+function isPostRelevant(post, projectKeywords) {
+  if (!projectKeywords || projectKeywords.length === 0) return true;
+
+  // Build keyword variants (lowercase, no-space, spaced)
+  const variants = [];
+  for (const raw of projectKeywords) {
+    const kw = raw.toLowerCase().replace(/^#/, '').trim();
+    if (!kw) continue;
+    variants.push(kw);
+    const noSpace = kw.replace(/\s+/g, '');
+    if (noSpace !== kw) variants.push(noSpace);
+    const withSpace = kw.replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)([a-z])/g, '$1 $2');
+    if (withSpace !== kw) variants.push(withSpace);
+  }
+  const uniqueVariants = [...new Set(variants)];
+
+  // NOTE: keyword_matched TIDAK di-include karena itu label dari scraper,
+  // bukan konten asli post — semua post punya keyword_matched = keyword yg di-search.
+  const searchText = [
+    post.content || '',
+    post.author || '',
+    post.handle || '',
+    post.hashtags || '',
+  ].join(' ').toLowerCase();
+
+  return uniqueVariants.some(kw => searchText.includes(kw));
+}
+
+// Helper: get project keywords from DB (cached per request)
+async function getProjectKeywords(projectId) {
+  if (!projectId) return [];
+  try {
+    const project = await db.collection('projects').findOne(
+      { _id: new ObjectId(projectId) },
+      { projection: { keywords: 1, excluded_keywords: 1 } }
+    );
+    if (!project || !project.keywords) return [];
+    let kws = [];
+    try { kws = JSON.parse(project.keywords); } catch {}
+    if (typeof kws === 'string') kws = kws.split(',').map(k => k.trim());
+    return Array.isArray(kws) ? kws.filter(k => k.length > 0) : [];
+  } catch (e) {
+    console.warn('[Relevance] Failed to load project keywords:', e.message);
+    return [];
+  }
+}
+
 // ===== PROJECTS =====
 app.get('/api/projects', optionalAuth, async (req, res) => {
   try {
@@ -771,8 +824,17 @@ app.put('/api/sessions/:id', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
   const postsData = Array.isArray(req.body) ? req.body : [req.body];
   try {
+    // Load project keywords for relevance filter (use first post's project_id)
+    const projectId = postsData[0]?.project_id;
+    const projectKeywords = await getProjectKeywords(projectId);
+    
     let inserted = 0;
     for (const p of postsData) {
+      // Relevance filter: skip posts yang tidak mengandung keyword project
+      if (projectKeywords.length > 0 && !isPostRelevant(p, projectKeywords)) {
+        continue;
+      }
+      
       // Check for duplicate
       if (p.external_id) {
         const existing = await db.collection('posts').findOne({
@@ -821,8 +883,18 @@ app.post('/api/posts/bulk', async (req, res) => {
   }
   
   try {
+    // Load project keywords for relevance filter
+    const projectKeywords = await getProjectKeywords(project_id);
+    
     let inserted = 0;
+    let skippedIrrelevant = 0;
     for (const p of posts) {
+      // Relevance filter: skip posts yang tidak mengandung keyword project
+      if (projectKeywords.length > 0 && !isPostRelevant(p, projectKeywords)) {
+        skippedIrrelevant++;
+        continue;
+      }
+      
       // Check for duplicate
       if (p.external_id) {
         const existing = await db.collection('posts').findOne({
@@ -868,8 +940,8 @@ app.post('/api/posts/bulk', async (req, res) => {
       }
     }
     
-    console.log(`Bulk insert: ${inserted}/${posts.length} posts saved for project ${project_id}`);
-    res.json({ inserted, total: posts.length });
+    console.log(`Bulk insert: ${inserted}/${posts.length} posts saved for project ${project_id}` + (skippedIrrelevant > 0 ? ` (${skippedIrrelevant} irrelevant filtered)` : ''));
+    res.json({ inserted, total: posts.length, filtered_irrelevant: skippedIrrelevant });
   } catch (e) {
     console.error('Bulk insert error:', e);
     res.status(500).json({ error: e.message });

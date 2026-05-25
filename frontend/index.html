@@ -2110,6 +2110,63 @@ function parseKeywords(keywords) {
   return [];
 }
 
+// ===== RELEVANCE FILTER =====
+// Filter out posts yang tidak relevan dengan project keywords.
+// Platform search (IG explore/tags, FB /search, Twitter /search, Threads /search)
+// sering menyisipkan "recommended/suggested" posts yang tidak mengandung keyword
+// sama sekali (contoh: Cristiano Ronaldo muncul di search "juragan99").
+//
+// Strategi: cek apakah content/author/handle/hashtags mengandung SALAH SATU
+// keyword project. Matching case-insensitive, spasi & tanda baca di-normalize.
+// Post yang tidak match satupun keyword → dibuang sebelum save ke DB.
+//
+// Khusus: author/handle dari akun official brand (mengandung keyword di username)
+// tetap lolos meskipun caption-nya kosong / generik.
+function filterRelevantPosts(posts, projectKeywords) {
+  if (!projectKeywords || projectKeywords.length === 0) return posts;
+
+  // Normalize keywords: lowercase, strip # dan spasi → generate variants
+  // "juragan99" → ["juragan99", "juragan 99"]
+  // "juragan 99 trans" → ["juragan 99 trans", "juragan99trans"]
+  const kwVariants = [];
+  for (const raw of projectKeywords) {
+    const kw = raw.toLowerCase().replace(/^#/, '').trim();
+    if (!kw) continue;
+    kwVariants.push(kw);
+    // Variant tanpa spasi (untuk match di hashtag/handle)
+    const noSpace = kw.replace(/\s+/g, '');
+    if (noSpace !== kw) kwVariants.push(noSpace);
+    // Variant dengan spasi antar kata-angka boundary
+    // "juragan99" → "juragan 99"
+    const withSpace = kw.replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)([a-z])/g, '$1 $2');
+    if (withSpace !== kw) kwVariants.push(withSpace);
+  }
+  const uniqueVariants = [...new Set(kwVariants)];
+
+  const before = posts.length;
+  const filtered = posts.filter(p => {
+    // Gabungkan semua searchable text dari post
+    // NOTE: keyword_matched TIDAK di-include karena itu label dari scraper,
+    // bukan konten asli post. Semua post pasti punya keyword_matched = keyword
+    // yang di-search, jadi kalau di-include, filter tidak berguna.
+    const searchText = [
+      p.content || '',
+      p.author || '',
+      p.handle || '',
+      p.hashtags || '',
+    ].join(' ').toLowerCase();
+
+    // Cek apakah ada keyword yang match
+    return uniqueVariants.some(kw => searchText.includes(kw));
+  });
+
+  const removed = before - filtered.length;
+  if (removed > 0) {
+    console.log(`[Relevance Filter] Removed ${removed}/${before} irrelevant posts (${filtered.length} kept)`);
+  }
+  return filtered;
+}
+
 async function createProject(){
   const name=document.getElementById('np-name').value.trim();
   const rawKw=document.getElementById('np-keywords').value.trim();
@@ -2755,6 +2812,8 @@ async function startScraping(){
             case 'news':data=await fetchNews(kw,maxR,scFrom,scTo);break;
           }
           data.forEach(p=>{p.sentiment=sentiment(p.content);p.cities=findCities(p.content);p.hashtags=findTags(p.content);p.keyword_matched=kw;});
+          // Relevance filter: buang post yang tidak mengandung keyword di content/author/handle
+          data = filterRelevantPosts(data, kws);
           if (data.length > 0) {
             keywordSuccess[kw] = true;
             platformHadSuccess = true;
