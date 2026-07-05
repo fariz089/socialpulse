@@ -668,6 +668,22 @@ class ThreadsScraper(BaseScraper):
                 self._dismiss_login_modal(page, timeout_ms=3_000)
 
             current_url = page.url.lower()
+
+            # Fix: threads.com (wrong domain / redirect) → threads.net (domain resmi).
+            # Kalau browser ter-redirect ke www.threads.com, page akan render kosong
+            # (body empty, no SSR content). Deteksi dan force re-navigate ke threads.net.
+            if 'threads.com' in current_url and 'threads.net' not in current_url:
+                logger.warning(
+                    f"[threads] Redirected ke threads.com (wrong domain): {page.url} — "
+                    "force re-navigate ke threads.net"
+                )
+                corrected_url = search_url.replace('threads.com', 'threads.net')
+                try:
+                    page.goto(corrected_url, wait_until='domcontentloaded')
+                except PWTimeout:
+                    logger.warning("[threads] Re-navigation (domain fix) timeout; lanjut anyway")
+                current_url = page.url.lower()
+
             if any(p in current_url for p in [
                 '/login', '/accounts/login', '/challenge', 'instagram.com/accounts',
             ]):
@@ -688,17 +704,29 @@ class ThreadsScraper(BaseScraper):
                 # domcontentloaded, tapi Relay preloader hydrate butuh tick).
                 page.wait_for_timeout(2_500)
                 html_content = page.content()
-                html_posts = _extract_posts_from_html(html_content)
-                for p in html_posts:
-                    pid = p.get('id')
-                    if pid and pid not in collected:
-                        collected[pid] = p
-                html_posts_count = len(html_posts)
-                if html_posts_count > 0:
-                    logger.info(
-                        f"[threads] HTML SSR extraction: "
-                        f"{html_posts_count} posts ({len(collected)} unique total)"
+
+                # Guard: kalau body kosong sama sekali (body empty / domain salah
+                # / cookie expired silent), save debug dan skip langsung ke
+                # XHR listener — gak ada gunanya parse HTML kosong.
+                if not html_content or len(html_content.strip()) < 200:
+                    logger.warning(
+                        f"[threads] Page body hampir kosong (len={len(html_content or '')}) "
+                        f"di url={page.url} — kemungkinan wrong domain atau cookie invalid. "
+                        "Skip SSR extraction, fallback ke XHR listener."
                     )
+                    self._save_debug_artifacts(page)
+                else:
+                    html_posts = _extract_posts_from_html(html_content)
+                    for p in html_posts:
+                        pid = p.get('id')
+                        if pid and pid not in collected:
+                            collected[pid] = p
+                    html_posts_count = len(html_posts)
+                    if html_posts_count > 0:
+                        logger.info(
+                            f"[threads] HTML SSR extraction: "
+                            f"{html_posts_count} posts ({len(collected)} unique total)"
+                        )
             except Exception as e:
                 logger.warning(f"[threads] HTML SSR extraction error (non-fatal): {e}")
 
