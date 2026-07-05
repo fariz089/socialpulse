@@ -18,7 +18,7 @@ services:
     environment:
       - MONGO_INITDB_DATABASE=slaytics
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-slaytics_admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-Sl4yt1cs_S3cur3P4ss_2024}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-MyV3ryStr0ng_Pr0duct10n_P4ssw0rd!}
     networks:
       - slaytics-net
 
@@ -29,7 +29,7 @@ services:
       - "${API_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
-      - MONGO_URI=mongodb://${MONGO_USERNAME:-slaytics_admin}:${MONGO_PASSWORD:-MyV3ryStr0ng_Pr0duct10n_P4ssw0rd!}@43.157.205.200:27017
+      - MONGO_URI=mongodb://${MONGO_USERNAME:-slaytics_admin}:${MONGO_PASSWORD:-MyV3ryStr0ng_Pr0duct10n_P4ssw0rd!}@mongo:27017
       - DB_NAME=slaytics
       - JWT_SECRET=${JWT_SECRET:-slaytics-jwt-secret-change-in-production}
       - PORT=3001
